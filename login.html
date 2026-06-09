@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录/注册 - 优选商城</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- =============================================
+         登录/注册页面
+         居中卡片布局，渐变背景
+         标签切换登录/注册两个表单
+         ============================================= -->
+    <div class="auth-page">
+        <div class="auth-container">
+            <!-- 头部 Logo -->
+            <div class="auth-header">
+                <a href="index.html" class="auth-logo">优选<span>商城</span></a>
+                <p>品质生活，尽在优选</p>
+            </div>
+            
+            <!-- 登录/注册切换标签 -->
+            <div class="auth-tabs">
+                <div class="auth-tab active" data-tab="login">登录</div>
+                <div class="auth-tab" data-tab="register">注册</div>
+            </div>
+
+            <!-- ===== 登录表单 ===== -->
+            <form class="auth-form active" id="login-form" novalidate>
+                <!-- 用户名/手机号输入 -->
+                <div class="form-group" id="login-username-group">
+                    <label>用户名 / 手机号</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">👤</span>
+                        <input type="text" id="login-username" placeholder="请输入用户名或手机号" required>
+                    </div>
+                    <span class="error-msg" id="login-username-error"></span>
+                </div>
+                <!-- 密码输入 -->
+                <div class="form-group" id="login-password-group">
+                    <label>密码</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="login-password" placeholder="请输入密码" required>
+                    </div>
+                    <span class="error-msg" id="login-password-error"></span>
+                </div>
+                <!-- 提交按钮 -->
+                <button type="submit" class="btn-submit">登 录</button>
+                <!-- 记住密码 + 忘记密码 -->
+                <div class="form-extra">
+                    <label><input type="checkbox" id="remember-me"> 记住密码</label>
+                    <a href="javascript:void(0)">忘记密码？</a>
+                </div>
+            </form>
+
+            <!-- ===== 注册表单 ===== -->
+            <form class="auth-form" id="register-form" novalidate>
+                <!-- 用户名 -->
+                <div class="form-group" id="reg-username-group">
+                    <label>用户名</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">👤</span>
+                        <input type="text" id="reg-username" placeholder="4-20位字母、数字或下划线" required>
+                    </div>
+                    <span class="error-msg" id="reg-username-error"></span>
+                </div>
+                <!-- 手机号 -->
+                <div class="form-group" id="reg-phone-group">
+                    <label>手机号</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">📱</span>
+                        <input type="tel" id="reg-phone" placeholder="请输入11位手机号" required>
+                    </div>
+                    <span class="error-msg" id="reg-phone-error"></span>
+                </div>
+                <!-- 密码 -->
+                <div class="form-group" id="reg-password-group">
+                    <label>密码</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="reg-password" placeholder="6-20位，含字母和数字" required>
+                    </div>
+                    <span class="error-msg" id="reg-password-error"></span>
+                </div>
+                <!-- 确认密码 -->
+                <div class="form-group" id="reg-confirm-group">
+                    <label>确认密码</label>
+                    <div class="input-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" id="reg-confirm" placeholder="请再次输入密码" required>
+                    </div>
+                    <span class="error-msg" id="reg-confirm-error"></span>
+                </div>
+                <!-- 提交 -->
+                <button type="submit" class="btn-submit">注 册</button>
+                <!-- 用户协议 -->
+                <div class="form-extra">
+                    <label><input type="checkbox" id="agree-terms" checked> 同意《用户协议》和《隐私政策》</label>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // =============================================
+        // 登录/注册页专属脚本
+        // =============================================
+
+        // ===== 标签切换 =====
+        /**
+         * 点击登录/注册标签切换表单显示
+         */
+        document.querySelectorAll('.auth-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+                // 移除所有 active 状态
+                document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+                // 激活选中的标签和表单
+                tab.classList.add('active');
+                document.getElementById(targetTab + '-form').classList.add('active');
+            });
+        });
+
+        // 如果 URL 中有 #register，自动切换到注册标签
+        if (window.location.hash === '#register') {
+            document.querySelector('[data-tab="register"]').click();
+        }
+
+        // ===== 表单验证工具函数 =====
+        
+        /**
+         * 显示表单字段错误
+         * @param {string} groupId - form-group 的 ID
+         * @param {string} errorId - 错误提示 span 的 ID
+         * @param {string} message - 错误提示文字
+         */
+        function showFieldError(groupId, errorId, message) {
+            const group = document.getElementById(groupId);
+            const error = document.getElementById(errorId);
+            group.classList.add('error');       // 输入框变红
+            group.classList.remove('success');
+            error.textContent = message;
+            return false;
+        }
+
+        /**
+         * 清除表单字段错误，标记为成功状态
+         * @param {string} groupId - form-group 的 ID
+         */
+        function clearFieldError(groupId) {
+            const group = document.getElementById(groupId);
+            group.classList.remove('error');
+            group.classList.add('success');     // 输入框变绿
+        }
+
+        /**
+         * 清除表单所有字段的错误状态
+         * @param {string} formId - 表单 ID
+         */
+        function clearAllErrors(formId) {
+            document.querySelectorAll(`#${formId} .form-group`).forEach(g => {
+                g.classList.remove('error', 'success');
+            });
+            document.querySelectorAll(`#${formId} .error-msg`).forEach(e => {
+                e.textContent = '';
+            });
+        }
+
+        // ===== 登录表单提交处理 =====
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();  // 阻止表单默认提交行为
+            clearAllErrors('login-form');
+            
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            let isValid = true;
+
+            // 验证用户名（不能为空，至少2位）
+            if (!username) {
+                showFieldError('login-username-group', 'login-username-error', '请输入用户名或手机号');
+                isValid = false;
+            } else if (username.length < 2) {
+                showFieldError('login-username-group', 'login-username-error', '用户名长度不能少于2位');
+                isValid = false;
+            } else {
+                clearFieldError('login-username-group');
+            }
+
+            // 验证密码（不能为空，至少6位）
+            if (!password) {
+                showFieldError('login-password-group', 'login-password-error', '请输入密码');
+                isValid = false;
+            } else if (password.length < 6) {
+                showFieldError('login-password-group', 'login-password-error', '密码长度不能少于6位');
+                isValid = false;
+            } else {
+                clearFieldError('login-password-group');
+            }
+
+            if (!isValid) return;
+
+            // 从 LocalStorage 查找用户（模拟后端数据库查询）
+            const users = JSON.parse(localStorage.getItem('shop_users') || '[]');
+            // 支持用户名或手机号登录
+            const user = users.find(u => 
+                (u.username === username || u.phone === username) && u.password === password
+            );
+
+            if (user) {
+                // 登录成功：保存当前用户信息到 LocalStorage
+                const currentUser = {
+                    id: user.id,
+                    name: user.username,
+                    phone: user.phone,
+                };
+                localStorage.setItem('shop_currentUser', JSON.stringify(currentUser));
+                AppState.currentUser = currentUser;
+                loadCartFromStorage();       // 恢复购物车
+                updateUserUI();              // 更新界面
+                updateCartBadge();
+                
+                showToast('登录成功！欢迎回来', 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            } else {
+                showFieldError('login-password-group', 'login-password-error', '用户名或密码错误');
+            }
+        });
+
+        // ===== 注册表单提交处理 =====
+        document.getElementById('register-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            clearAllErrors('register-form');
+            
+            const username = document.getElementById('reg-username').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const password = document.getElementById('reg-password').value.trim();
+            const confirm = document.getElementById('reg-confirm').value.trim();
+            const agreeTerms = document.getElementById('agree-terms').checked;
+            let isValid = true;
+
+            // 验证用户名（4-20位字母、数字、下划线或中文）
+            const usernameRegex = /^[a-zA-Z0-9_\u4e00-\u9fa5]{4,20}$/;
+            if (!username) {
+                showFieldError('reg-username-group', 'reg-username-error', '请输入用户名');
+                isValid = false;
+            } else if (!usernameRegex.test(username)) {
+                showFieldError('reg-username-group', 'reg-username-error', '用户名为4-20位字母、数字、下划线或中文');
+                isValid = false;
+            } else {
+                // 检查用户名是否已被注册
+                const users = JSON.parse(localStorage.getItem('shop_users') || '[]');
+                if (users.find(u => u.username === username)) {
+                    showFieldError('reg-username-group', 'reg-username-error', '该用户名已被注册');
+                    isValid = false;
+                } else {
+                    clearFieldError('reg-username-group');
+                }
+            }
+
+            // 验证手机号（11位，1开头，第二位3-9）
+            const phoneRegex = /^1[3-9]\d{9}$/;
+            if (!phone) {
+                showFieldError('reg-phone-group', 'reg-phone-error', '请输入手机号');
+                isValid = false;
+            } else if (!phoneRegex.test(phone)) {
+                showFieldError('reg-phone-group', 'reg-phone-error', '请输入正确的11位手机号');
+                isValid = false;
+            } else {
+                const users = JSON.parse(localStorage.getItem('shop_users') || '[]');
+                if (users.find(u => u.phone === phone)) {
+                    showFieldError('reg-phone-group', 'reg-phone-error', '该手机号已被注册');
+                    isValid = false;
+                } else {
+                    clearFieldError('reg-phone-group');
+                }
+            }
+
+            // 验证密码（6-20位，必须包含字母和数字）
+            const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{6,20}$/;
+            if (!password) {
+                showFieldError('reg-password-group', 'reg-password-error', '请输入密码');
+                isValid = false;
+            } else if (!passwordRegex.test(password)) {
+                showFieldError('reg-password-group', 'reg-password-error', '密码为6-20位，必须包含字母和数字');
+                isValid = false;
+            } else {
+                clearFieldError('reg-password-group');
+            }
+
+            // 确认密码一致性验证
+            if (!confirm) {
+                showFieldError('reg-confirm-group', 'reg-confirm-error', '请确认密码');
+                isValid = false;
+            } else if (confirm !== password) {
+                showFieldError('reg-confirm-group', 'reg-confirm-error', '两次输入的密码不一致');
+                isValid = false;
+            } else {
+                clearFieldError('reg-confirm-group');
+            }
+
+            // 用户协议必须勾选
+            if (!agreeTerms) {
+                showToast('请同意用户协议和隐私政策', 'error');
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
+            // 注册成功：保存新用户到 LocalStorage
+            const users = JSON.parse(localStorage.getItem('shop_users') || '[]');
+            const newUser = {
+                id: 'U' + Date.now(),          // 使用时间戳生成唯一用户ID
+                username: username,
+                phone: phone,
+                password: password,            // 实际项目中应该加密存储
+                registerTime: new Date().toISOString(),
+            };
+            users.push(newUser);
+            localStorage.setItem('shop_users', JSON.stringify(users));
+
+            // 注册后自动登录
+            const currentUser = {
+                id: newUser.id,
+                name: newUser.username,
+                phone: newUser.phone,
+            };
+            localStorage.setItem('shop_currentUser', JSON.stringify(currentUser));
+            AppState.currentUser = currentUser;
+            updateUserUI();
+            
+            showToast('注册成功！欢迎加入优选商城', 'success');
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 1000);
+        });
+
+        // ===== 实时验证（输入框失焦时触发） =====
+        // 提高用户体验，在离开输入框时即时提示格式错误
+        
+        document.getElementById('reg-username').addEventListener('blur', function() {
+            const val = this.value.trim();
+            const regex = /^[a-zA-Z0-9_\u4e00-\u9fa5]{4,20}$/;
+            if (val && !regex.test(val)) {
+                showFieldError('reg-username-group', 'reg-username-error', '格式不正确');
+            } else if (val) {
+                clearFieldError('reg-username-group');
+            }
+        });
+
+        document.getElementById('reg-phone').addEventListener('blur', function() {
+            const val = this.value.trim();
+            const regex = /^1[3-9]\d{9}$/;
+            if (val && !regex.test(val)) {
+                showFieldError('reg-phone-group', 'reg-phone-error', '手机号格式不正确');
+            } else if (val) {
+                clearFieldError('reg-phone-group');
+            }
+        });
+
+        document.getElementById('reg-password').addEventListener('blur', function() {
+            const val = this.value.trim();
+            const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{6,20}$/;
+            if (val && !regex.test(val)) {
+                showFieldError('reg-password-group', 'reg-password-error', '密码必须包含字母和数字');
+            } else if (val) {
+                clearFieldError('reg-password-group');
+            }
+        });
+
+        document.getElementById('reg-confirm').addEventListener('blur', function() {
+            const val = this.value.trim();
+            const pwd = document.getElementById('reg-password').value.trim();
+            if (val && val !== pwd) {
+                showFieldError('reg-confirm-group', 'reg-confirm-error', '密码不一致');
+            } else if (val) {
+                clearFieldError('reg-confirm-group');
+            }
+        });
+    </script>
+</body>
+</html>

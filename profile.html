@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - 优选商城</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- =============================================
+         顶部信息栏
+         ============================================= -->
+    <div class="top-bar">
+        <div class="container">
+            <div class="left-links">
+                <a href="index.html">优选商城欢迎您！</a>
+                <a href="#">我的订单</a>
+                <a href="#">客户服务</a>
+            </div>
+            <div class="right-links">
+                <a href="login.html" class="login-link">登录</a>
+                <span class="user-info" style="display:none;"></span>
+                <button class="btn-logout" style="display:none;" onclick="logout()">退出</button>
+                <a href="cart.html">购物车 <span id="cart-badge" class="badge" style="display:none;">0</span></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主头部 -->
+    <header class="main-header">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <div class="logo-icon">U</div>
+                <div class="logo-text">优选<span>商城</span></div>
+            </a>
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="搜索商品、品牌、分类...">
+                <button id="search-btn">🔍 搜索</button>
+            </div>
+            <div class="header-actions">
+                <a href="profile.html" class="header-action-item">
+                    <span class="icon">👤</span>
+                    <span class="label">个人中心</span>
+                </a>
+                <a href="cart.html" class="header-action-item">
+                    <span class="icon">🛒</span>
+                    <span class="label">购物车</span>
+                    <span id="cart-badge" class="badge" style="display:none;">0</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- =============================================
+         个人中心主体
+         左侧菜单 + 右侧内容面板
+         ============================================= -->
+    <main class="main-content">
+        <div class="container">
+            <div class="profile-page">
+                <!-- 未登录提示 -->
+                <div id="profile-not-login" style="display:none;text-align:center;padding:80px;">
+                    <p style="font-size:18px;color:#999;margin-bottom:20px;">请先登录后查看个人中心</p>
+                    <a href="login.html" class="btn-go-shopping">去登录</a>
+                </div>
+
+                <!-- 个人中心布局 -->
+                <div class="profile-layout" id="profile-layout">
+                    <!-- ===== 左侧菜单 ===== -->
+                    <aside class="profile-sidebar">
+                        <!-- 用户头像区域（紫色渐变背景） -->
+                        <div class="profile-avatar-area">
+                            <div class="profile-avatar">👤</div>
+                            <div class="user-name" id="profile-name">用户名</div>
+                            <div class="user-id" id="profile-id">ID: ---</div>
+                        </div>
+                        <!-- 菜单列表 -->
+                        <nav class="profile-menu">
+                            <div class="profile-menu-item active" data-panel="orders">
+                                📋 我的订单
+                            </div>
+                            <div class="profile-menu-item" data-panel="favorites">
+                                ❤️ 我的收藏
+                            </div>
+                            <div class="profile-menu-item" data-panel="info">
+                                👤 个人信息
+                            </div>
+                            <div class="profile-menu-item" data-panel="address">
+                                📍 收货地址
+                            </div>
+                            <div class="profile-menu-item" data-panel="settings">
+                                ⚙️ 账号设置
+                            </div>
+                        </nav>
+                    </aside>
+
+                    <!-- ===== 右侧内容区 ===== -->
+                    <div class="profile-content">
+                        <!-- 面板1：我的订单 -->
+                        <div class="profile-panel active" id="panel-orders">
+                            <h3>我的订单</h3>
+                            <div id="orders-list">
+                                <p style="color:#999;text-align:center;padding:40px;">暂无订单</p>
+                            </div>
+                        </div>
+
+                        <!-- 面板2：【新功能】我的收藏 -->
+                        <div class="profile-panel" id="panel-favorites">
+                            <h3>我的收藏</h3>
+                            <div id="favorite-list">
+                                <p style="color:#999;text-align:center;padding:40px;">暂无收藏商品</p>
+                            </div>
+                        </div>
+
+                        <!-- 面板3：个人信息 -->
+                        <div class="profile-panel" id="panel-info">
+                            <h3>个人信息</h3>
+                            <div style="max-width:400px;">
+                                <div class="form-group">
+                                    <label>用户名</label>
+                                    <div class="input-wrapper">
+                                        <input type="text" id="info-username" readonly style="padding-left:16px;background:#f5f5f5;">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>手机号</label>
+                                    <div class="input-wrapper">
+                                        <input type="text" id="info-phone" readonly style="padding-left:16px;background:#f5f5f5;">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>注册时间</label>
+                                    <div class="input-wrapper">
+                                        <input type="text" id="info-regtime" readonly style="padding-left:16px;background:#f5f5f5;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 面板4：收货地址管理 -->
+                        <div class="profile-panel" id="panel-address">
+                            <h3>收货地址管理</h3>
+                            <div style="max-width:500px;">
+                                <div class="form-group">
+                                    <label>收货人</label>
+                                    <div class="input-wrapper">
+                                        <input type="text" id="addr-name" placeholder="收货人姓名" style="padding-left:16px;">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>手机号</label>
+                                    <div class="input-wrapper">
+                                        <input type="tel" id="addr-phone" placeholder="收货手机号" style="padding-left:16px;">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>详细地址</label>
+                                    <div class="input-wrapper">
+                                        <input type="text" id="addr-detail" placeholder="省/市/区/详细地址" style="padding-left:16px;">
+                                    </div>
+                                </div>
+                                <button class="btn-submit" style="width:auto;padding:10px 40px;" onclick="saveAddress()">保存地址</button>
+                            </div>
+                        </div>
+
+                        <!-- 面板5：账号设置（修改密码） -->
+                        <div class="profile-panel" id="panel-settings">
+                            <h3>账号设置</h3>
+                            <div style="max-width:400px;">
+                                <div class="form-group">
+                                    <label>修改密码</label>
+                                    <div class="input-wrapper">
+                                        <input type="password" id="settings-old-pwd" placeholder="原密码" style="padding-left:16px;">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="input-wrapper">
+                                        <input type="password" id="settings-new-pwd" placeholder="新密码（6-20位，含字母和数字）" style="padding-left:16px;">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="input-wrapper">
+                                        <input type="password" id="settings-confirm-pwd" placeholder="确认新密码" style="padding-left:16px;">
+                                    </div>
+                                </div>
+                                <button class="btn-submit" style="width:auto;padding:10px 40px;" onclick="changePassword()">修改密码</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>购物指南</h4>
+                    <a href="#">购物流程</a><a href="#">会员介绍</a><a href="#">常见问题</a><a href="#">联系客服</a>
+                </div>
+                <div class="footer-col">
+                    <h4>配送方式</h4>
+                    <a href="#">上门自提</a><a href="#">快递运输</a><a href="#">物流配送</a><a href="#">配送范围</a>
+                </div>
+                <div class="footer-col">
+                    <h4>支付方式</h4>
+                    <a href="#">货到付款</a><a href="#">在线支付</a><a href="#">分期付款</a><a href="#">银行卡支付</a>
+                </div>
+                <div class="footer-col">
+                    <h4>售后服务</h4>
+                    <a href="#">退换货政策</a><a href="#">退换货流程</a><a href="#">价格保护</a><a href="#">投诉建议</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 优选商城 | 24215220120_陈学羽_大作业 | Web编程技术课程设计</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        // =============================================
+        // 个人中心页专属脚本
+        // =============================================
+
+        /**
+         * 渲染个人中心页面
+         * 根据登录状态显示不同内容
+         */
+        function renderProfile() {
+            // 未登录时显示登录提示
+            if (!AppState.currentUser) {
+                document.getElementById('profile-not-login').style.display = '';
+                document.getElementById('profile-layout').style.display = 'none';
+                return;
+            }
+            
+            // 已登录：显示用户信息
+            document.getElementById('profile-layout').style.display = '';
+            document.getElementById('profile-name').textContent = AppState.currentUser.name;
+            document.getElementById('profile-id').textContent = 'ID: ' + AppState.currentUser.id;
+            
+            // 加载用户详细信息（从 LocalStorage 用户表中查找）
+            const users = JSON.parse(localStorage.getItem('shop_users') || '[]');
+            const user = users.find(u => u.id === AppState.currentUser.id);
+            
+            if (user) {
+                document.getElementById('info-username').value = user.username;
+                document.getElementById('info-phone').value = user.phone;
+                document.getElementById('info-regtime').value = formatDate(user.registerTime);
+            }
+            
+            // 加载保存的收货地址
+            const savedAddr = JSON.parse(localStorage.getItem(`shop_addr_${AppState.currentUser.id}`) || '{}');
+            document.getElementById('addr-name').value = savedAddr.name || '';
+            document.getElementById('addr-phone').value = savedAddr.phone || '';
+            document.getElementById('addr-detail').value = savedAddr.address || '';
+            
+            // 渲染订单列表和收藏列表
+            renderOrders();
+        }
+        
+        /**
+         * 渲染订单列表
+         * 从 LocalStorage 读取当前用户的订单数据
+         */
+        function renderOrders() {
+            const orders = getOrders();
+            const ordersList = document.getElementById('orders-list');
+            
+            // 无订单时显示空状态
+            if (orders.length === 0) {
+                ordersList.innerHTML = '<p style="color:#999;text-align:center;padding:40px;">暂无订单</p>';
+                return;
+            }
+            
+            // 渲染订单卡片列表
+            ordersList.innerHTML = orders.map(order => `
+                <div class="order-card">
+                    <!-- 订单头部：订单号 + 时间 + 状态 -->
+                    <div class="order-header">
+                        <span>订单号: ${order.id}</span>
+                        <span>${formatDate(order.createTime)}</span>
+                        <span class="order-status">${order.status}</span>
+                    </div>
+                    <!-- 订单商品缩略图 -->
+                    <div class="order-products">
+                        ${order.items.map(item => `
+                            <div class="order-product-img" title="${item.name}">
+                                <img src="${item.image}" alt="${item.name}" onerror="this.innerHTML='📦'">
+                            </div>
+                        `).join('')}
+                    </div>
+                    <!-- 订单底部：总件数 + 总金额 -->
+                    <div class="order-footer">
+                        <span>共 ${order.items.reduce((s,i) => s + i.quantity, 0)} 件商品</span>
+                        <span class="order-total">合计: ¥${order.total.toFixed(2)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // =============================================
+        // 左侧菜单切换交互
+        // =============================================
+        document.querySelectorAll('.profile-menu-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const panelId = item.dataset.panel;
+                
+                // 切换菜单高亮
+                document.querySelectorAll('.profile-menu-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                
+                // 切换内容面板显示
+                document.querySelectorAll('.profile-panel').forEach(p => p.classList.remove('active'));
+                document.getElementById('panel-' + panelId).classList.add('active');
+                
+                // 【新功能】切换到收藏面板时加载收藏列表
+                if (panelId === 'favorites') {
+                    renderFavoriteList('favorite-list');
+                }
+            });
+        });
+        
+        // URL 参数自动切换面板（如 profile.html?tab=orders）
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab');
+        if (tabParam) {
+            const menuItem = document.querySelector(`[data-panel="${tabParam}"]`);
+            if (menuItem) menuItem.click();
+        }
+        
+        /**
+         * 保存收货地址到 LocalStorage
+         */
+        function saveAddress() {
+            const name = document.getElementById('addr-name').value.trim();
+            const phone = document.getElementById('addr-phone').value.trim();
+            const address = document.getElementById('addr-detail').value.trim();
+            
+            // 表单验证
+            if (!name) { showToast('请输入收货人姓名', 'error'); return; }
+            if (!phone || !/^1[3-9]\d{9}$/.test(phone)) { showToast('请输入正确的手机号', 'error'); return; }
+            if (!address) { showToast('请输入详细地址', 'error'); return; }
+            
+            localStorage.setItem(`shop_addr_${AppState.currentUser.id}`, JSON.stringify({ name, phone, address }));
+            showToast('地址保存成功', 'success');
+        }
+        
+        /**
+         * 修改密码
+         * 验证原密码正确性后更新为新密码
+         */
+        function changePassword() {
+            const oldPwd = document.getElementById('settings-old-pwd').value.trim();
+            const newPwd = document.getElementById('settings-new-pwd').value.trim();
+            const confirmPwd = document.getElementById('settings-confirm-pwd').value.trim();
+            
+            // 表单验证
+            if (!oldPwd) { showToast('请输入原密码', 'error'); return; }
+            if (!newPwd) { showToast('请输入新密码', 'error'); return; }
+            
+            // 密码格式验证（6-20位，包含字母和数字）
+            const pwdRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{6,20}$/;
+            if (!pwdRegex.test(newPwd)) {
+                showToast('新密码格式不正确（6-20位，含字母和数字）', 'error');
+                return;
+            }
+            if (newPwd !== confirmPwd) {
+                showToast('两次输入的密码不一致', 'error');
+                return;
+            }
+            
+            // 从 LocalStorage 查找用户并验证原密码
+            const users = JSON.parse(localStorage.getItem('shop_users') || '[]');
+            const userIndex = users.findIndex(u => u.id === AppState.currentUser.id);
+            
+            if (userIndex === -1 || users[userIndex].password !== oldPwd) {
+                showToast('原密码错误', 'error');
+                return;
+            }
+            
+            // 更新密码
+            users[userIndex].password = newPwd;
+            localStorage.setItem('shop_users', JSON.stringify(users));
+            showToast('密码修改成功', 'success');
+            
+            // 清空密码输入框
+            document.getElementById('settings-old-pwd').value = '';
+            document.getElementById('settings-new-pwd').value = '';
+            document.getElementById('settings-confirm-pwd').value = '';
+        }
+        
+        // 页面加载完成后渲染
+        document.addEventListener('DOMContentLoaded', renderProfile);
+    </script>
+</body>
+</html>

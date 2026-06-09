@@ -1,0 +1,1939 @@
+/* ============================================
+   全局样式表 - 24215220120_陈学羽_大作业
+   网上商城 - 综合页面设计
+   
+   文件结构：
+   一、  CSS 变量与基础重置
+   二、  顶部导航栏
+   三、  主头部（Logo + 搜索框 + 操作区）
+   四、  分类导航
+   五、  轮播图
+   六、  主内容区域（快捷入口 + 商品网格 + 页脚）
+   七、  登录/注册页面
+   八、  商品详情页
+   九、  购物车页面
+   十、  结算/订单页面
+   十一、个人中心页面
+   十二、Toast 提示 + Modal 弹窗
+   十三、新功能样式（收藏/搜索历史/回到顶部/排序）
+   十四、响应式布局
+   ============================================ */
+
+/* =====================================================
+   一、CSS 变量定义
+   使用 CSS 自定义属性统一管理颜色、间距、阴影等
+   方便全局修改和维护
+   ===================================================== */
+:root {
+    --primary: #e4393c;
+    --primary-hover: #c1272d;
+    --primary-light: #ffe8e8;
+    --secondary: #ff6b35;
+    --dark: #1a1a2e;
+    --text: #333333;
+    --text-light: #666666;
+    --text-muted: #999999;
+    --bg: #f5f5f5;
+    --white: #ffffff;
+    --border: #e8e8e8;
+    --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.15);
+    --radius: 8px;
+    --radius-sm: 4px;
+    --transition: all 0.3s ease;
+    --header-height: 72px;
+    --success: #52c41a;
+    --warning: #faad14;
+    --info: #1890ff;
+}
+
+/* =====================================================
+   一-续、基础样式重置
+   清除浏览器默认样式，建立统一基准
+   ===================================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Microsoft YaHei', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+    color: var(--text);
+    background-color: var(--bg);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+ul, ol {
+    list-style: none;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+input, button, select, textarea {
+    font-family: inherit;
+    font-size: inherit;
+    outline: none;
+    border: none;
+}
+
+button {
+    cursor: pointer;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* =====================================================
+   二、顶部信息栏
+   深色背景，显示欢迎语、登录状态、购物车入口
+   ===================================================== */
+.top-bar {
+    background-color: var(--dark);
+    color: #ccc;
+    font-size: 13px;
+    padding: 6px 0;
+}
+
+.top-bar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.top-bar a {
+    color: #ccc;
+    transition: var(--transition);
+}
+
+.top-bar a:hover {
+    color: var(--white);
+}
+
+.top-bar .left-links a {
+    margin-right: 20px;
+}
+
+.top-bar .right-links {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.top-bar .right-links .user-info {
+    color: var(--white);
+    font-weight: 500;
+}
+
+.top-bar .right-links .btn-logout {
+    background: transparent;
+    color: #ccc;
+    padding: 2px 8px;
+    border: 1px solid #555;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    transition: var(--transition);
+}
+
+.top-bar .right-links .btn-logout:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+}
+
+/* =====================================================
+   三、主头部区域
+   包含 Logo、搜索框、个人中心/购物车入口
+   使用 sticky 定位，滚动时始终固定在顶部
+   ===================================================== */
+.main-header {
+    background-color: var(--white);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.main-header .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--header-height);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-icon {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.logo-text {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--dark);
+}
+
+.logo-text span {
+    color: var(--primary);
+}
+
+/* 搜索框样式 - 红色边框，带搜索按钮 */
+.search-box {
+    display: flex;
+    align-items: center;
+    flex: 0 1 500px;
+    margin: 0 40px;
+}
+
+.search-box input {
+    flex: 1;
+    height: 40px;
+    border: 2px solid var(--primary);
+    border-right: none;
+    border-radius: var(--radius) 0 0 var(--radius);
+    padding: 0 16px;
+    font-size: 14px;
+    transition: var(--transition);
+}
+
+.search-box input:focus {
+    border-color: var(--primary-hover);
+}
+
+.search-box button {
+    height: 40px;
+    padding: 0 24px;
+    background-color: var(--primary);
+    color: var(--white);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    font-size: 16px;
+    font-weight: 500;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.search-box button:hover {
+    background-color: var(--primary-hover);
+}
+
+/* 头部右侧操作区 - 个人中心、购物车图标 */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.header-action-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+}
+
+.header-action-item:hover {
+    color: var(--primary);
+}
+
+.header-action-item .icon {
+    font-size: 22px;
+    margin-bottom: 2px;
+}
+
+.header-action-item .label {
+    font-size: 12px;
+    color: var(--text-light);
+}
+
+.header-action-item .badge {
+    position: absolute;
+    top: -6px;
+    right: -10px;
+    background-color: var(--primary);
+    color: var(--white);
+    font-size: 11px;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+}
+
+/* =====================================================
+   四、分类导航栏
+   红色"全部商品分类"按钮 + 横向滚动的分类链接
+   底部红色边框作为视觉强调
+   ===================================================== */
+.category-nav {
+    display: none;
+}
+
+.category-nav .container {
+    display: flex;
+    align-items: center;
+    height: 42px;
+}
+
+.category-nav .all-categories {
+    background-color: var(--primary);
+    color: var(--white);
+    padding: 0 20px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    margin-right: 10px;
+}
+
+.category-nav .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    flex: 1;
+}
+
+.category-nav .nav-links a {
+    padding: 8px 16px;
+    font-size: 14px;
+    white-space: nowrap;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+}
+
+.category-nav .nav-links a:hover,
+.category-nav .nav-links a.active {
+    color: var(--primary);
+    background-color: var(--primary-light);
+    font-weight: 600;
+}
+
+/* =====================================================
+   五、轮播图（已隐藏，代码保留以备后续启用）
+   使用 absolute 定位实现淡入淡出切换
+   ===================================================== */
+.banner-section {
+    display: none;
+}
+
+.banner-container {
+    position: relative;
+    border-radius: 0;
+    overflow: hidden;
+    height: 180px;
+    box-shadow: none;
+}
+
+.banner-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.banner-slide.active {
+    opacity: 1;
+}
+
+.banner-slide .banner-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+}
+
+.banner-slide .banner-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    color: var(--white);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.banner-slide .banner-content h2 {
+    font-size: 22px;
+    margin-bottom: 6px;
+}
+
+.banner-slide .banner-content p {
+    font-size: 13px;
+    margin-bottom: 10px;
+    opacity: 0.9;
+}
+
+.banner-slide .banner-content .btn-banner {
+    display: inline-block;
+    padding: 8px 28px;
+    background-color: var(--primary);
+    color: var(--white);
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.banner-slide .banner-content .btn-banner:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+}
+
+.banner-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 44px;
+    height: 44px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: var(--text);
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.banner-btn:hover {
+    background-color: var(--white);
+    box-shadow: var(--shadow-hover);
+}
+
+.banner-btn.prev {
+    left: 20px;
+}
+
+.banner-btn.next {
+    right: 20px;
+}
+
+.banner-dots {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    display: flex;
+    gap: 8px;
+}
+
+.banner-dots .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.banner-dots .dot.active {
+    background-color: var(--white);
+    width: 28px;
+    border-radius: 5px;
+}
+
+/* =====================================================
+   六、主内容区域
+   包含快捷入口、商品区块标题、商品网格、页脚
+   ===================================================== */
+.main-content {
+    flex: 1;
+    padding-bottom: 40px;
+}
+
+/* 快捷入口 - 5列网格布局，点击可快速筛选分类 */
+.quick-entry {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin: 0 auto 16px;
+    max-width: 1200px;
+    padding: 0 20px;
+}
+
+.quick-entry-item {
+    background-color: var(--white);
+    border-radius: var(--radius);
+    padding: 20px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow);
+}
+
+.quick-entry-item:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+}
+
+.quick-entry-item .entry-icon {
+    font-size: 36px;
+    margin-bottom: 8px;
+}
+
+.quick-entry-item .entry-text {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* 区块标题 - 左侧彩色竖条 + 标题文字，右侧"查看更多"链接 */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border);
+}
+
+.section-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-title::before {
+    content: '';
+    width: 4px;
+    height: 24px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 2px;
+}
+
+.section-more {
+    color: var(--text-muted);
+    font-size: 14px;
+    transition: var(--transition);
+}
+
+.section-more:hover {
+    color: var(--primary);
+}
+
+/* 商品网格 - 4列布局，悬停上浮 + 图片缩放效果 */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.product-card {
+    background-color: var(--white);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: var(--transition);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+}
+
+.product-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-hover);
+}
+
+.product-card .product-image {
+    height: 220px;
+    background-color: #f0f0f0;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-card .product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.product-card:hover .product-image img {
+    transform: scale(1.05);
+}
+
+.product-card .product-image .product-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: var(--white);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.product-card .product-info {
+    padding: 14px;
+}
+
+.product-card .product-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 8px;
+    min-height: 40px;
+}
+
+.product-card .product-price {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.product-card .price-current {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.product-card .price-current::before {
+    content: '¥';
+    font-size: 14px;
+}
+
+.product-card .price-original {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-decoration: line-through;
+}
+
+.product-card .product-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.product-card .product-meta .sales {
+    color: var(--text-light);
+}
+
+.product-card .btn-add-cart {
+    background-color: var(--primary);
+    color: var(--white);
+    padding: 6px 14px;
+    border-radius: 14px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.product-card .btn-add-cart:hover {
+    background-color: var(--primary-hover);
+}
+
+/* 页脚 - 深色背景，4列网格布局，底部版权信息 */
+.site-footer {
+    background-color: var(--dark);
+    color: #ccc;
+    padding: 40px 0 20px;
+    margin-top: auto;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.footer-col h4 {
+    color: var(--white);
+    font-size: 16px;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+.footer-col p,
+.footer-col a {
+    font-size: 13px;
+    line-height: 2;
+    color: #999;
+    display: block;
+    transition: var(--transition);
+}
+
+.footer-col a:hover {
+    color: var(--primary);
+}
+
+.footer-bottom {
+    border-top: 1px solid #333;
+    padding-top: 20px;
+    text-align: center;
+    font-size: 13px;
+    color: #666;
+}
+
+/* =====================================================
+   七、登录/注册页面
+   居中卡片式布局，渐变背景，标签切换
+   表单验证状态样式（error/success）
+   ===================================================== */
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+}
+
+.auth-container {
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    width: 100%;
+    max-width: 440px;
+    overflow: hidden;
+}
+
+.auth-header {
+    padding: 30px 30px 0;
+    text-align: center;
+}
+
+.auth-header .auth-logo {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 8px;
+}
+
+.auth-header .auth-logo span {
+    color: var(--primary);
+}
+
+.auth-header p {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.auth-tabs {
+    display: flex;
+    margin: 24px 30px 0;
+    border-bottom: 2px solid var(--border);
+}
+
+.auth-tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: var(--transition);
+}
+
+.auth-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.auth-form {
+    padding: 30px;
+    display: none;
+}
+
+.auth-form.active {
+    display: block;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.form-group .input-wrapper {
+    position: relative;
+}
+
+.form-group input {
+    width: 100%;
+    height: 44px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0 16px 0 40px;
+    font-size: 14px;
+    transition: var(--transition);
+}
+
+.form-group input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(228, 57, 60, 0.1);
+}
+
+.form-group .input-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 16px;
+}
+
+.form-group .error-msg {
+    color: var(--primary);
+    font-size: 12px;
+    margin-top: 4px;
+    display: none;
+}
+
+.form-group.error input {
+    border-color: var(--primary);
+}
+
+.form-group.error .error-msg {
+    display: block;
+}
+
+.form-group.success input {
+    border-color: var(--success);
+}
+
+.btn-submit {
+    width: 100%;
+    height: 46px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: var(--white);
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: 600;
+    transition: var(--transition);
+    margin-top: 10px;
+}
+
+.btn-submit:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.form-extra {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    margin-top: 16px;
+    color: var(--text-muted);
+}
+
+.form-extra a {
+    color: var(--primary);
+}
+
+/* =====================================================
+   八、商品详情页
+   左右两栏布局：图片画廊 + 商品信息
+   包含缩略图切换、数量选择器、标签页
+   ===================================================== */
+.product-detail {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    padding: 30px 0;
+}
+
+.detail-gallery {
+    position: relative;
+}
+
+.detail-main-image {
+    width: 100%;
+    height: 420px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.detail-main-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.detail-thumbnails {
+    display: flex;
+    gap: 10px;
+}
+
+.detail-thumbnail {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: var(--transition);
+    background-color: #f0f0f0;
+}
+
+.detail-thumbnail.active,
+.detail-thumbnail:hover {
+    border-color: var(--primary);
+}
+
+.detail-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.detail-info .detail-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 12px;
+}
+
+.detail-info .detail-desc {
+    color: var(--text-light);
+    font-size: 14px;
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    background-color: #fafafa;
+    border-radius: var(--radius-sm);
+}
+
+.detail-info .detail-price-area {
+    background: linear-gradient(135deg, #fff5f5, #fff0f0);
+    padding: 20px;
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+}
+
+.detail-info .price-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.detail-info .detail-price {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.detail-info .detail-price::before {
+    content: '¥';
+    font-size: 20px;
+}
+
+.detail-info .detail-original {
+    font-size: 14px;
+    color: var(--text-muted);
+    text-decoration: line-through;
+    margin-left: 12px;
+}
+
+.detail-info .detail-meta {
+    display: flex;
+    gap: 30px;
+    font-size: 13px;
+    color: var(--text-light);
+    margin-bottom: 24px;
+}
+
+.detail-info .quantity-selector {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 24px;
+}
+
+.detail-info .quantity-selector span {
+    font-size: 14px;
+    margin-right: 12px;
+}
+
+.detail-info .qty-btn {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--border);
+    background-color: var(--white);
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.detail-info .qty-btn:hover {
+    background-color: #f5f5f5;
+}
+
+.detail-info .qty-btn:first-of-type {
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+
+.detail-info .qty-btn:last-of-type {
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.detail-info .qty-input {
+    width: 60px;
+    height: 36px;
+    border: 1px solid var(--border);
+    border-left: none;
+    border-right: none;
+    text-align: center;
+    font-size: 14px;
+}
+
+.detail-info .detail-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.detail-info .btn-buy-now {
+    flex: 1;
+    height: 48px;
+    background: linear-gradient(135deg, var(--secondary), #ff8c42);
+    color: var(--white);
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.detail-info .btn-buy-now:hover {
+    opacity: 0.9;
+}
+
+.detail-info .btn-add-to-cart {
+    flex: 1;
+    height: 48px;
+    background-color: var(--primary);
+    color: var(--white);
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.detail-info .btn-add-to-cart:hover {
+    background-color: var(--primary-hover);
+}
+
+.detail-tabs {
+    margin-top: 40px;
+}
+
+.detail-tab-headers {
+    display: flex;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 20px;
+}
+
+.detail-tab-header {
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: var(--transition);
+}
+
+.detail-tab-header.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.detail-tab-content {
+    display: none;
+    line-height: 1.8;
+    color: var(--text-light);
+}
+
+.detail-tab-content.active {
+    display: block;
+}
+
+/* =====================================================
+   九、购物车页面
+   表格式布局，支持全选/单选、数量修改、删除
+   底部固定结算栏，显示总价和结算按钮
+   ===================================================== */
+.cart-page {
+    padding: 30px 0;
+}
+
+.cart-empty {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-muted);
+}
+
+.cart-empty .empty-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+}
+
+.cart-empty p {
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.cart-empty .btn-go-shopping {
+    display: inline-block;
+    padding: 12px 36px;
+    background-color: var(--primary);
+    color: var(--white);
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.cart-table {
+    width: 100%;
+    background-color: var(--white);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.cart-table-header {
+    display: grid;
+    grid-template-columns: 50px 1fr 120px 140px 140px 100px;
+    padding: 14px 20px;
+    background-color: #fafafa;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-light);
+    align-items: center;
+}
+
+.cart-item {
+    display: grid;
+    grid-template-columns: 50px 1fr 120px 140px 140px 100px;
+    padding: 16px 20px;
+    align-items: center;
+    border-top: 1px solid var(--border);
+}
+
+.cart-item .item-checkbox input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--primary);
+}
+
+.cart-item .item-product {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.cart-item .item-image {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background-color: #f0f0f0;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cart-item .item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cart-item .item-name {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.cart-item .item-price {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.cart-item .item-quantity {
+    display: flex;
+    align-items: center;
+}
+
+.cart-item .item-total {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.cart-item .btn-delete {
+    color: var(--text-muted);
+    background: none;
+    font-size: 13px;
+    transition: var(--transition);
+}
+
+.cart-item .btn-delete:hover {
+    color: var(--primary);
+}
+
+.cart-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background-color: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-top: 20px;
+}
+
+.cart-footer .select-all {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.cart-footer .select-all input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+}
+
+.cart-footer .cart-summary {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.cart-footer .total-text {
+    font-size: 14px;
+    color: var(--text-light);
+}
+
+.cart-footer .total-price {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.cart-footer .btn-checkout {
+    padding: 14px 48px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: var(--white);
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.cart-footer .btn-checkout:hover {
+    opacity: 0.9;
+}
+
+/* =====================================================
+   十、结算/订单页面
+   左右两栏：收货地址+支付方式+商品列表 | 订单汇总
+   右侧汇总栏使用 sticky 定位跟随滚动
+   ===================================================== */
+.checkout-page {
+    padding: 30px 0;
+}
+
+.checkout-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 20px;
+}
+
+.checkout-section {
+    background-color: var(--white);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+}
+
+.checkout-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.form-row .form-group {
+    margin-bottom: 0;
+}
+
+.form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.checkout-items {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.checkout-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.checkout-item .co-image {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-sm);
+    background-color: #f0f0f0;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.checkout-item .co-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.checkout-item .co-info {
+    flex: 1;
+}
+
+.checkout-item .co-name {
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.checkout-item .co-price {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.checkout-item .co-total {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.checkout-summary {
+    background-color: var(--white);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 90px;
+}
+
+.checkout-summary h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 14px;
+    color: var(--text-light);
+}
+
+.summary-row.total {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary);
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    margin-top: 8px;
+}
+
+.btn-place-order {
+    width: 100%;
+    height: 48px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: var(--white);
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 20px;
+    transition: var(--transition);
+}
+
+.btn-place-order:hover {
+    opacity: 0.9;
+}
+
+/* =====================================================
+   十一、个人中心页面
+   左侧菜单 + 右侧内容区布局
+   包含订单列表、个人信息、收货地址、账号设置
+   ===================================================== */
+.profile-page {
+    padding: 30px 0;
+}
+
+.profile-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 20px;
+}
+
+.profile-sidebar {
+    background-color: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.profile-avatar-area {
+    padding: 30px 20px;
+    text-align: center;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: var(--white);
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.3);
+    margin: 0 auto 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+}
+
+.profile-avatar-area .user-name {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.profile-avatar-area .user-id {
+    font-size: 13px;
+    opacity: 0.8;
+    margin-top: 4px;
+}
+
+.profile-menu {
+    padding: 10px 0;
+}
+
+.profile-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 24px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--transition);
+    border-left: 3px solid transparent;
+}
+
+.profile-menu-item:hover,
+.profile-menu-item.active {
+    background-color: var(--primary-light);
+    color: var(--primary);
+    border-left-color: var(--primary);
+    font-weight: 600;
+}
+
+.profile-content {
+    background-color: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 30px;
+    min-height: 400px;
+}
+
+.profile-panel {
+    display: none;
+}
+
+.profile-panel.active {
+    display: block;
+}
+
+.profile-panel h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.order-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.order-card .order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--text-light);
+}
+
+.order-card .order-status {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.order-card .order-products {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.order-card .order-product-img {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-sm);
+    background-color: #f0f0f0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.order-card .order-product-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.order-card .order-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+}
+
+.order-card .order-total {
+    font-weight: 600;
+}
+
+/* =====================================================
+   十二、Toast 提示消息
+   页面顶部居中弹出，3秒后自动消失
+   支持 success/error/info 三种类型
+   ===================================================== */
+.toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    padding: 12px 28px;
+    border-radius: var(--radius);
+    color: var(--white);
+    font-size: 14px;
+    font-weight: 500;
+    animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.toast.success {
+    background-color: var(--success);
+}
+
+.toast.error {
+    background-color: var(--primary);
+}
+
+.toast.info {
+    background-color: var(--info);
+}
+
+@keyframes toastIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@keyframes toastOut {
+    from { opacity: 1; transform: translateX(-50%) translateY(0); }
+    to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+}
+
+/* Modal 弹窗 - 半透明遮罩 + 居中卡片 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+}
+
+.modal {
+    background-color: var(--white);
+    border-radius: 12px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    animation: scaleIn 0.3s ease;
+}
+
+.modal h3 {
+    font-size: 20px;
+    margin-bottom: 16px;
+}
+
+.modal p {
+    color: var(--text-light);
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.btn-secondary {
+    padding: 10px 24px;
+    background-color: #f0f0f0;
+    color: var(--text);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.btn-secondary:hover {
+    background-color: #e0e0e0;
+}
+
+.btn-primary {
+    padding: 10px 24px;
+    background-color: var(--primary);
+    color: var(--white);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* =====================================================
+   十三、新功能样式
+   收藏按钮、排序栏、回到顶部、搜索历史
+   ===================================================== */
+
+/* 收藏按钮 - 位于商品图片右上角 */
+.product-card .favorite-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 2;
+    transition: transform 0.3s ease;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+}
+.product-card .favorite-btn:hover {
+    transform: scale(1.3);
+}
+.product-card .favorite-btn.active {
+    animation: heartBeat 0.4s ease;
+}
+
+/* 收藏动画 */
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    25% { transform: scale(1.3); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+/* 商品排序栏 */
+.sort-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+.sort-bar .sort-label {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-right: 8px;
+}
+.sort-bar .sort-btn {
+    padding: 6px 16px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px;
+    background: var(--white);
+    cursor: pointer;
+    transition: var(--transition);
+    color: var(--text-light);
+}
+.sort-bar .sort-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+.sort-bar .sort-btn.active {
+    background: var(--primary);
+    color: var(--white);
+    border-color: var(--primary);
+}
+
+/* 搜索历史面板 */
+.search-history-panel {
+    position: absolute;
+    top: 42px;
+    left: 0;
+    right: 0;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 0 0 var(--radius) var(--radius);
+    box-shadow: var(--shadow-hover);
+    z-index: 100;
+    display: none;
+    max-height: 240px;
+    overflow-y: auto;
+}
+.search-history-panel.show {
+    display: block;
+}
+.search-history-panel .history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-muted);
+}
+.search-history-panel .history-header .clear-btn {
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 12px;
+    background: none;
+}
+.search-history-panel .history-item {
+    padding: 10px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.search-history-panel .history-item:hover {
+    background-color: var(--primary-light);
+}
+.search-history-panel .history-item .history-icon {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+/* 回到顶部按钮 */
+#back-to-top {
+    position: fixed;
+    bottom: 60px;
+    right: 30px;
+    width: 44px;
+    height: 44px;
+    background: var(--primary);
+    color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(228, 57, 60, 0.4);
+}
+#back-to-top.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+#back-to-top:hover {
+    background: var(--primary-hover);
+    transform: translateY(-4px);
+}
+
+/* =====================================================
+   十四、响应式布局
+   根据屏幕宽度调整网格列数和布局方式
+   ===================================================== */
+@media (max-width: 1024px) {
+    .product-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .quick-entry {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .checkout-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .search-box {
+        margin: 0 20px;
+        flex: 1;
+    }
+    .product-detail {
+        grid-template-columns: 1fr;
+    }
+    .profile-layout {
+        grid-template-columns: 1fr;
+    }
+    .cart-table-header,
+    .cart-item {
+        grid-template-columns: 40px 1fr 80px 100px 100px 60px;
+        font-size: 12px;
+    }
+    .footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .product-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    .banner-container {
+        height: 200px;
+    }
+    .banner-slide .banner-content h2 {
+        font-size: 20px;
+    }
+    .quick-entry {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
