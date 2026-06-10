@@ -55,6 +55,12 @@
          购物车内容区域
          支持空状态、登录提示、商品列表三种显示
          实现方式：renderCart() 根据 AppState 状态动态切换显示内容
+         实现原理：购物车有三种显示状态，通过 style.display 控制显隐：
+                  状态1（未登录）：显示 🔒 图标 + "请先登录" + 去登录按钮
+                  状态2（空购物车）：显示 🛒 图标 + "去购物" 按钮
+                  状态3（有商品）：显示商品表格 + 底部结算栏
+                  商品表格使用 Grid 布局模拟表格式结构，表头和行共享相同的列定义。
+                  结算栏包含全选复选框、已选数量/总价汇总、结算按钮。
          ============================================= -->
     <main class="main-content">
         <div class="container">
@@ -139,12 +145,23 @@
         //       handleSelectAll()、changeItemQty()、changeItemQtyInput()、
         //       handleDelete()、goCheckout()
         // 实现方式：Array.map().join('') 动态渲染表格行 + Array.filter()/reduce() 计算汇总
+        // 实现原理：购物车页面是典型的"数据驱动视图"模式——所有 UI 由 AppState.cart 数组决定。
+        //           renderCart() 负责完整的视图更新：先判断登录/空状态，
+        //           再通过 map() 遍历 cart 数组生成每一行的 HTML。
+        //           每次操作（增删改查）后都调用 renderCart() 重新渲染整个列表，
+        //           这是简化版的"全量更新"策略，适合数据量较小的场景。
+        //           状态管理：选中状态存储在 item.checked 中，全选时遍历所有项设置。
         // =============================================
 
         /**
          * 渲染购物车内容
          * 根据登录状态和购物车是否为空显示不同界面
          * 实现方式：innerHTML 替换内容 + style.display 控制三种状态切换
+         * 实现原理：三种状态通过 if-else 分支判断：先检查登录，再检查购物车是否为空。
+         *           商品列表渲染使用模板字符串 + map().join() 模式：
+         *           每行包含复选框、商品图片+名称、单价、数量选择器、小计、删除按钮。
+         *           复选框的 checked 属性绑定 item.checked，onchange 事件触发状态切换。
+         *           数量输入框直接显示 item.quantity，修改时调用 updateCartQuantity。
          */
         function renderCart() {
             const cartItemsEl = document.getElementById('cart-items');
@@ -211,6 +228,11 @@
         /**
          * 更新购物车底部结算信息
          * 实现方式：Array.filter() 筛选选中商品 + Array.reduce() 计算总数/总金额
+         * 实现原理：filter() 筛选出 checked 为 true 的商品（即用户勾选的商品），
+         *           reduce() 累加这些商品的数量得到"已选件数"。
+         *           总金额通过 getCartTotal() 计算（内部也是 filter + reduce）。
+         *           全选框状态：用 every() 判断是否所有商品都被选中，
+         *           全部选中则勾选全选框（实现"全选"与"全部手动勾选"的状态同步）。
          */
         function updateCartSummary() {
             const checkedItems = AppState.cart.filter(i => i.checked);
@@ -269,6 +291,10 @@
          * 删除购物车商品
          * @param {number} productId - 商品ID
          * 实现方式：removeFromCart() 全局函数删除 + showToast() 提示 + renderCart() 刷新
+         * 实现原理：removeFromCart() 内部使用 filter() 创建不包含该商品的新数组，
+         *           替换 AppState.cart 后自动保存到 LocalStorage。
+         *           然后调用 renderCart() 重新渲染整个购物车页面，更新角标和汇总。
+         *           这是一种"操作 → 保存 → 重新渲染"的标准数据流。
          */
         function handleDelete(productId) {
             removeFromCart(productId);
@@ -280,6 +306,9 @@
          * 去结算
          * 验证有选中商品后跳转到结算页
          * 实现方式：Array.filter() 检查选中商品 + window.location.href 跳转
+         * 实现原理：先 filter 筛选选中商品，若为空则 Toast 提示错误并 return 阻止跳转。
+         *           有选中商品则直接跳转到 checkout.html，购物车数据已存储在 AppState 
+         *           和 LocalStorage 中，结算页可直接读取，无需 URL 传参。
          */
         function goCheckout() {
             const checkedItems = AppState.cart.filter(i => i.checked);

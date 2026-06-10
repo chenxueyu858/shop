@@ -11,6 +11,10 @@
          顶部信息栏
          显示欢迎语、登录/注册、购物车入口
          实现方式：HTML + CSS 静态布局，JS 通过 updateUserUI() 动态控制显示
+         实现原理：.top-bar 是深色背景的导航条，内部 .container 使用 Flexbox 水平排列。
+                  JS 根据登录状态（AppState.currentUser）切换元素的 display 属性：
+                  未登录时显示"登录/注册"链接，已登录时显示用户名和退出按钮。
+                  .badge 角标使用 position:absolute 定位在"购物车"文字右上角。
          ============================================= -->
     <div class="top-bar">
         <div class="container">
@@ -35,6 +39,11 @@
          主头部
          Logo + 搜索框(带历史记录) + 个人中心/购物车
          实现方式：HTML 静态结构 + initSearch() 绑定搜索事件 + updateCartBadge() 更新角标
+         实现原理：.main-header 使用 position: sticky 固定在视口顶部，滚动时不消失。
+                  Logo 区域由图标（渐变方块）和文字组成。
+                  搜索框是 input + button 组合，红色边框突出显示。
+                  搜索历史面板是绝对定位在搜索框下方的隐藏 div，
+                  通过 CSS 类 .show 控制显示，input 聚焦时 JS 触发显示。
          ============================================= -->
     <header class="main-header">
         <div class="container">
@@ -78,6 +87,10 @@
     <!-- =============================================
          轮播图（已隐藏，代码保留备用）
          实现方式：initBanner() 控制轮播逻辑 + setInterval() 自动切换
+         实现原理：所有 .banner-slide 使用 position:absolute 堆叠在同一容器中，
+                  只有带 .active 类的 slide 的 opacity 为 1（可见），其余为 0（隐藏）。
+                  CSS transition 实现淡入淡出。JS 通过 setInterval 每 4 秒切换 active 类。
+                  左右箭头和底部圆点绑定点击事件，支持手动切换。
          ============================================= -->
     <section class="banner-section">
         <div class="banner-container">
@@ -119,6 +132,11 @@
          主内容区域
          快捷入口 + 排序栏 + 商品列表
          实现方式：renderProducts() 动态渲染商品卡片 + filterByCategory() 分类筛选 + setSortType() 排序
+         实现原理：快捷入口使用 CSS Grid 5 列布局，每个入口绑定 onclick 调用 filterByCategory()。
+                  排序栏使用 Flexbox 水平排列按钮，按钮通过 data-sort 属性标识排序类型。
+                  JS 根据当前排序类型为对应按钮添加 .active 类（红色高亮）。
+                  商品网格 #product-grid 是空的占位容器，由 JS 的 renderProducts() 
+                  通过 innerHTML 动态注入商品卡片 HTML，实现数据驱动视图。
          ============================================= -->
     <main class="main-content">
         <!-- 快捷入口 - 5个分类图标，点击可快速筛选 -->
@@ -219,12 +237,18 @@
         // 首页专属脚本
         // 函数: showSearchHistory()、hideSearchHistory()、useHistory()
         // 实现方式：initBanner() 启动轮播 + sessionStorage 跨页面传参
+        // 实现原理：DOMContentLoaded 事件在 DOM 构建完成后触发，此时可以安全操作 DOM。
+        //           initBanner() 启动轮播定时器，sessionStorage 读取从其他页面传来的分类参数。
+        //           sessionStorage 是会话级存储，关闭浏览器标签页后自动清除，
+        //           适合跨页面传递临时参数（与 localStorage 不同，后者持久化存储）。
         // =============================================
         
         /**
          * 页面加载完成后初始化轮播图
          * 以及恢复跨页面传递的分类筛选
          * 实现方式：addEventListener('DOMContentLoaded') 监听加载完成事件
+         * 实现原理：sessionStorage.getItem() 读取分类参数，读取后立即 removeItem() 清除，
+         *           防止刷新页面时重复应用筛选。然后调用 filterByCategory() 应用分类筛选。
          */
         document.addEventListener('DOMContentLoaded', () => {
             initBanner();
@@ -240,11 +264,21 @@
         // =============================================
         // 【新功能】搜索历史面板交互
         // 实现方式：classList.add/remove('show') 控制下拉面板显隐
+        // 实现原理：搜索历史面板使用 CSS position:absolute 定位在搜索框正下方，
+        //           默认 display:none 隐藏，添加 .show 类后 display:block 显示。
+        //           面板中的历史项通过 map() 遍历 AppState.searchHistory 数组动态生成。
+        //           点击历史项时，将关键词填入搜索框并触发搜索按钮的 click 事件。
+        //           使用 onmousedown + preventDefault 替代 onclick，防止 blur 事件
+        //           先于 click 触发导致面板提前关闭。
         // =============================================
         
         /**
          * 显示搜索历史下拉面板
          * 实现方式：Array.map().join('') 动态渲染历史列表 HTML
+         * 实现原理：先检查 AppState.searchHistory 是否为空，空则不显示。
+         *           map() 遍历历史数组，为每个关键词生成一个 .history-item div，
+         *           通过 innerHTML 注入面板。关键词中的单引号用 replace(/'/g, "\\'") 转义，
+         *           防止破坏 onclick 属性中的字符串。
          */
         function showSearchHistory() {
             const panel = document.getElementById('search-history-panel');

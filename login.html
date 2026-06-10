@@ -12,6 +12,11 @@
          居中卡片布局，渐变背景
          标签切换登录/注册两个表单
          实现方式：classList.add/remove('active') 切换标签 + addEventListener('submit') 处理表单
+         实现原理：.auth-page 使用 Flexbox + min-height:100vh 实现全屏居中。
+                  .auth-tab 使用 CSS 底部边框实现选中指示（透明→红色）。
+                  两个表单使用相同的 .auth-form 类，通过 .active 类控制显示/隐藏。
+                  表单验证使用正则表达式校验输入格式，错误时添加 .error 类显示红色边框和错误信息。
+                  用户数据存储在 LocalStorage 中（shop_users 数组），登录时用 Array.find() 查找匹配。
          ============================================= -->
     <div class="auth-page">
         <div class="auth-container">
@@ -111,12 +116,22 @@
         // 函数: showFieldError()、clearFieldError()、clearAllErrors()
         // 实现方式：addEventListener('submit') 表单验证 + localStorage 用户数据管理
         //           + 正则表达式验证输入格式
+        // 实现原理：整个认证系统分为前端验证和后端模拟两部分。
+        //           前端验证：通过正则表达式实时检查用户名/手机号/密码格式，
+        //           使用 .error/.success 类即时反馈验证结果。
+        //           后端模拟：将用户数据以 JSON 格式存储在 LocalStorage 中，
+        //           注册时 push 新用户到数组，登录时 find 匹配用户名+密码。
+        //           这是一种纯前端的状态管理方案，适合课程设计演示。
         // =============================================
 
         // ===== 标签切换 =====
         /**
          * 点击登录/注册标签切换表单显示
          * 实现方式：querySelectorAll().forEach() 绑定点击 + classList.add/remove('active') 切换
+         * 实现原理：先移除所有标签和表单的 .active 类（清空状态），
+         *           再为目标标签和对应表单添加 .active 类（设置新状态）。
+         *           表单的 id 命名规则为 {tab}-form，通过 dataset.tab 动态拼接。
+         *           URL hash 检测：若 URL 含 #register 则自动切换到注册标签。
          */
         document.querySelectorAll('.auth-tab').forEach(tab => {
             tab.addEventListener('click', () => {
@@ -143,6 +158,9 @@
          * @param {string} errorId - 错误提示 span 的 ID
          * @param {string} message - 错误提示文字
          * 实现方式：classList.add('error') 设置红色边框 + textContent 显示错误信息
+         * 实现原理：通过 CSS 类 .error 触发样式变化（边框变红、错误信息显示），
+         *           .success 类触发边框变绿。两个类是互斥的（add error 时 remove success）。
+         *           textContent 安全地设置纯文本内容，避免 innerHTML 可能的 XSS 风险。
          */
         function showFieldError(groupId, errorId, message) {
             const group = document.getElementById(groupId);
@@ -179,6 +197,12 @@
 
         // ===== 登录表单提交处理 =====
         // 实现方式：addEventListener('submit') 监听提交 + Array.find() 查找用户验证
+        // 实现原理：e.preventDefault() 阻止表单的默认提交行为（页面刷新），
+        //           改为 JS 手动处理登录逻辑。先验证输入格式，再在 LocalStorage 的
+        //           shop_users 数组中用 find() 查找匹配的用户名/手机号 + 密码。
+        //           支持用户名或手机号两种方式登录（用 || 连接两个条件）。
+        //           登录成功后，将用户信息（不含密码）存入 shop_currentUser，
+        //           然后恢复购物车数据，更新 UI，1 秒后跳转首页。
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();  // 阻止表单默认提交行为
             clearAllErrors('login-form');
@@ -242,6 +266,11 @@
 
         // ===== 注册表单提交处理 =====
         // 实现方式：addEventListener('submit') 监听 + 正则 test() 验证 + localStorage 存储用户
+        // 实现原理：逐字段验证格式（正则 test()），验证通过后构建新用户对象，
+        //           Date.now() 生成唯一 ID，push 到 shop_users 数组并写回 LocalStorage。
+        //           注册成功后自动登录（设置 shop_currentUser），1 秒后跳转首页。
+        //           正则表达式：(?=.*[A-Za-z]) 是正向先行断言，确保字符串包含字母，
+        //           (?=.*\d) 确保包含数字，实现"必须同时包含字母和数字"的密码规则。
         document.getElementById('register-form').addEventListener('submit', function(e) {
             e.preventDefault();
             clearAllErrors('register-form');
@@ -352,6 +381,11 @@
         // ===== 实时验证（输入框失焦时触发） =====
         // 提高用户体验，在离开输入框时即时提示格式错误
         // 实现方式：addEventListener('blur') 监听失焦事件 + 正则 test() 即时校验
+        // 实现原理：blur 事件在元素失去焦点时触发，此时用户已完成输入并切换到下一个字段。
+        //           实时校验可以即时反馈错误，减少提交时的错误数量，提升用户体验。
+        //           注意：实时校验只在有输入内容时触发（val 非空），避免空白时误报错。
+        //           失焦校验比 input 事件更友好——不会在用户输入过程中频繁打断。
+        //           确认密码的校验还额外读取密码框的值进行对比验证。
         
         document.getElementById('reg-username').addEventListener('blur', function() {
             const val = this.value.trim();

@@ -56,6 +56,12 @@
          左侧：收货地址 + 支付方式 + 订单商品列表
          右侧：订单汇总 + 提交按钮（sticky 定位）
          实现方式：renderCheckout() 渲染页面 + placeOrder() 提交订单
+         实现原理：结算页是购物流程的最后一步，从 AppState.cart 中读取选中的商品。
+                  三种状态切换：未登录 → 登录提示，无选中商品 → 返回购物车，正常 → 结算表单。
+                  左侧表单包含收货地址（从 LocalStorage 预填）、支付方式（radio 单选）、商品列表。
+                  右侧汇总使用 position:sticky 固定在视口，始终可见。
+                  支付方式切换时通过事件委托监听 change 事件，动态修改 label 边框样式。
+                  提交订单时验证表单 → createOrder() 创建订单 → 跳转订单列表。
          ============================================= -->
     <main class="main-content">
         <div class="container">
@@ -188,12 +194,23 @@
         // 函数: renderCheckout()、updateSummary()、placeOrder()
         // 实现方式：Array.filter() 获取选中商品 + Array.map().join('') 渲染商品列表
         //           + createOrder() 创建订单 + setTimeout() 延迟跳转
+        // 实现原理：结算页是下单流程的终点，数据流为：
+        //           AppState.cart（选中商品） → renderCheckout（展示） → placeOrder（提交）
+        //           → createOrder（创建订单+清空购物车） → profile.html（查看订单）。
+        //           地址预填：优先从 LocalStorage 的 shop_addr_{用户ID} 读取保存的地址，
+        //           其次使用当前登录用户信息（姓名+手机号）作为默认值。
+        //           支付方式切换通过事件委托实现：在 document 上监听 change 事件，
+        //           判断 e.target.name === 'payment' 后动态切换样式。
         // =============================================
 
         /**
          * 渲染结算页面
          * 根据登录状态和购物车选中商品显示不同内容
          * 实现方式：style.display 控制三种状态切换 + value 赋值预填用户信息
+         * 实现原理：filter(i => i.checked) 获取购物车中所有选中商品。
+         *           收货人姓名和手机号从 AppState.currentUser 预填（减少用户输入）。
+         *           商品列表用 map() 遍历选中商品，每项显示缩略图+名称+单价×数量+小计。
+         *           汇总信息通过 getCartTotal() 计算总金额并显示。
          */
         function renderCheckout() {
             // 检查登录状态
@@ -272,6 +289,12 @@
          * 提交订单
          * 验证表单 → 创建订单 → 跳转订单列表
          * 实现方式：正则 test() 验证手机号 + createOrder() 全局函数创建订单 + setTimeout() 跳转
+         * 实现原理：先验证三个必填字段（收货人、手机号、地址），手机号用正则 /^1[3-9]\d{9}$/ 校验。
+         *           验证通过后构建 addressInfo 对象，调用 createOrder() 全局函数。
+         *           createOrder() 内部：生成订单号、深拷贝商品列表、计算总金额、
+         *           保存订单到 LocalStorage、清除购物车已购商品。
+         *           成功后 Toast 提示，1.5 秒后跳转到 profile.html?tab=orders 查看订单列表。
+         *           失败时 Toast 提示错误（通常因为购物车为空或未登录）。
          */
         function placeOrder() {
             const name = document.getElementById('receiver-name').value.trim();
