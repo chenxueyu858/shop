@@ -17,8 +17,9 @@
  */
 
 // =====================================================
-// 一、全局状态管理对象
+// 一、全局状态管理对象 (AppState)
 // 统一管理整个商城的状态数据，所有页面共享
+// 实现方式：使用 JavaScript 对象字面量 {} 定义全局状态容器
 // =====================================================
 const AppState = {
     currentUser: null,      // 当前登录用户信息 {id, name, phone}
@@ -34,6 +35,7 @@ const AppState = {
 // =====================================================
 // 二、页面初始化入口
 // 当 DOM 加载完成后自动执行以下初始化操作
+// 实现方式：使用 addEventListener('DOMContentLoaded') 监听页面加载事件
 // =====================================================
 document.addEventListener('DOMContentLoaded', () => {
     loadProducts();        // 加载商品 JSON 数据
@@ -50,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // 三、商品数据加载
 // 通过 fetch API 异步读取 data/products.json 文件
 // 失败时提供错误提示
+// 实现方式：fetch() + .then() 链式调用处理异步请求
 // =====================================================
 function loadProducts() {
     // 发送 HTTP 请求获取 JSON 数据
@@ -73,13 +76,16 @@ function loadProducts() {
 // =====================================================
 // 四、用户管理模块
 // 使用 LocalStorage 模拟后端用户系统
+// 实现方式：localStorage.getItem() / setItem() / removeItem() 读写数据
 // 存储键名: shop_currentUser (当前登录用户)
 //           shop_users (所有注册用户)
+// 函数: initUser()、loadCartFromStorage()、saveCartToStorage()、updateUserUI()、logout()
 // =====================================================
 
 /**
  * 初始化用户状态
  * 从 LocalStorage 读取之前保存的登录信息
+ * 实现方式：localStorage.getItem() + JSON.parse() 反序列化
  */
 function initUser() {
     const savedUser = localStorage.getItem('shop_currentUser');
@@ -96,6 +102,7 @@ function initUser() {
 /**
  * 从 LocalStorage 加载当前用户的购物车数据
  * 存储键名: shop_cart_{用户ID}
+ * 实现方式：localStorage.getItem() + JSON.parse() 反序列化
  */
 function loadCartFromStorage() {
     if (AppState.currentUser) {
@@ -107,6 +114,7 @@ function loadCartFromStorage() {
 
 /**
  * 将购物车数据持久化保存到 LocalStorage
+ * 实现方式：localStorage.setItem() + JSON.stringify() 序列化
  */
 function saveCartToStorage() {
     if (AppState.currentUser) {
@@ -118,6 +126,7 @@ function saveCartToStorage() {
 /**
  * 更新页面上的用户 UI 元素
  * 根据登录状态显示/隐藏不同元素
+ * 实现方式：querySelectorAll() 批量操作 DOM 元素的 style.display 属性
  */
 function updateUserUI() {
     const userInfoEls = document.querySelectorAll('.user-info');
@@ -143,6 +152,7 @@ function updateUserUI() {
 /**
  * 退出登录
  * 清除当前用户状态、购物车，跳转回首页
+ * 实现方式：localStorage.removeItem() 清除数据 + setTimeout() 延迟跳转
  */
 function logout() {
     AppState.currentUser = null;
@@ -159,12 +169,17 @@ function logout() {
 // 五、购物车管理模块
 // 支持：添加商品、删除商品、修改数量、选中/取消选中
 //       全选/取消全选、计算总价、计算总数量
+// 函数: addToCart()、removeFromCart()、updateCartQuantity()、
+//       toggleCartItemCheck()、toggleAllCartCheck()、getCartTotal()、
+//       getCartCount()、updateCartBadge()
+// 实现方式：数组方法 find()/filter()/push()/forEach() 操作购物车数据
 // =====================================================
 
 /**
  * 添加商品到购物车
  * @param {number} productId - 商品ID
  * @param {number} quantity  - 添加数量，默认为1
+ * 实现方式：Array.find() 查找商品 + Array.push() 新增购物车项
  */
 function addToCart(productId, quantity = 1) {
     // 未登录用户不能添加购物车
@@ -203,6 +218,7 @@ function addToCart(productId, quantity = 1) {
 /**
  * 从购物车中移除指定商品
  * @param {number} productId - 商品ID
+ * 实现方式：Array.filter() 过滤掉指定商品
  */
 function removeFromCart(productId) {
     AppState.cart = AppState.cart.filter(item => item.productId !== productId);
@@ -214,6 +230,7 @@ function removeFromCart(productId) {
  * 更新购物车中商品的数量
  * @param {number} productId - 商品ID
  * @param {number} quantity  - 新数量 (限制范围: 1-99)
+ * 实现方式：Array.find() 定位商品 + Math.max()/Math.min() 限制数量范围
  */
 function updateCartQuantity(productId, quantity) {
     const item = AppState.cart.find(item => item.productId === productId);
@@ -239,6 +256,7 @@ function toggleCartItemCheck(productId) {
 /**
  * 全选 / 取消全选
  * @param {boolean} checked - true=全选, false=取消全选
+ * 实现方式：Array.forEach() 遍历所有购物车项设置 checked 属性
  */
 function toggleAllCartCheck(checked) {
     AppState.cart.forEach(item => { item.checked = checked; });
@@ -248,6 +266,7 @@ function toggleAllCartCheck(checked) {
 /**
  * 计算购物车中已选中商品的总金额
  * @returns {number} 总金额
+ * 实现方式：Array.filter() 筛选选中商品 + Array.reduce() 累加金额
  */
 function getCartTotal() {
     return AppState.cart
@@ -258,6 +277,7 @@ function getCartTotal() {
 /**
  * 计算购物车中所有商品的总数量
  * @returns {number} 总数量
+ * 实现方式：Array.reduce() 累加所有商品数量
  */
 function getCartCount() {
     return AppState.cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -265,6 +285,7 @@ function getCartCount() {
 
 /**
  * 更新页面上的购物车角标数字
+ * 实现方式：querySelectorAll() 批量获取角标元素 + textContent 更新数量
  */
 function updateCartBadge() {
     const badges = document.querySelectorAll('#cart-badge');
@@ -278,12 +299,15 @@ function updateCartBadge() {
 // =====================================================
 // 六、商品渲染模块
 // 将商品数据动态生成为 HTML 卡片展示在页面上
+// 函数: renderProducts()、viewProductDetail()
+// 实现方式：Array.map() 生成 HTML 字符串 + innerHTML 批量插入 DOM
 // =====================================================
 
 /**
  * 渲染商品列表到页面
  * @param {Array}  products    - 商品数据数组
  * @param {string} containerId - 目标容器 ID，默认 'product-grid'
+ * 实现方式：模板字符串 `` + Array.map().join('') 批量生成 HTML
  */
 function renderProducts(products, containerId = 'product-grid') {
     const container = document.getElementById(containerId);
@@ -322,6 +346,7 @@ function renderProducts(products, containerId = 'product-grid') {
 /**
  * 跳转到商品详情页
  * @param {number} productId - 商品ID
+ * 实现方式：window.location.href 修改当前页面 URL 实现跳转
  */
 function viewProductDetail(productId) {
     window.location.href = `product.html?id=${productId}`;
@@ -331,10 +356,13 @@ function viewProductDetail(productId) {
 // 七、搜索功能模块
 // 支持按名称、描述、分类进行模糊搜索
 // 支持 Enter 键和按钮点击触发搜索
+// 函数: initSearch()、filterByCategory()
+// 实现方式：String.includes() 模糊匹配 + Array.filter() 筛选 + addEventListener 事件绑定
 // =====================================================
 
 /**
  * 初始化搜索框事件绑定
+ * 实现方式：addEventListener('click'/'keydown') 绑定搜索触发事件
  */
 function initSearch() {
     const searchInput = document.getElementById('search-input');
@@ -380,6 +408,7 @@ function initSearch() {
 /**
  * 按分类筛选商品
  * @param {string} category - 分类名称（'全部' 表示显示所有）
+ * 实现方式：Array.filter() 按 category 字段筛选 + classList.toggle() 更新导航高亮
  */
 function filterByCategory(category) {
     AppState.currentCategory = category;
@@ -408,12 +437,15 @@ function filterByCategory(category) {
 
 // =====================================================
 // 八、排序功能模块
+// 函数: applySorting()、setSortType()
+// 实现方式：Array.sort() 比较函数 + switch/case 分支处理
 // =====================================================
 
 /**
  * 对商品列表进行排序
  * @param {Array} products - 待排序的商品数组
  * @returns {Array} 排序后的商品数组
+ * 实现方式：展开运算符 [...products] 创建副本 + Array.sort() 比较函数
  */
 function applySorting(products) {
     const sorted = [...products];  // 创建副本，不修改原数组
@@ -444,6 +476,7 @@ function applySorting(products) {
 /**
  * 切换排序方式（由页面按钮调用）
  * @param {string} sortType - 排序类型
+ * 实现方式：dataset 属性读取按钮数据 + classList.toggle() 更新按钮高亮
  */
 function setSortType(sortType) {
     AppState.currentSort = sortType;
@@ -470,10 +503,15 @@ function setSortType(sortType) {
 // =====================================================
 // 九、收藏功能模块
 // 使用 LocalStorage 持久化用户收藏列表
+// 函数: loadFavoritesFromStorage()、saveFavoritesToStorage()、
+//       toggleFavorite()、isFavorited()、renderFavoriteBtn()、
+//       updateFavoriteBtns()、renderFavoriteList()
+// 实现方式：Array.includes()/indexOf()/push()/splice() 管理收藏列表
 // =====================================================
 
 /**
  * 从 LocalStorage 加载收藏列表
+ * 实现方式：localStorage.getItem() + JSON.parse() 反序列化
  */
 function loadFavoritesFromStorage() {
     if (AppState.currentUser) {
@@ -496,6 +534,7 @@ function saveFavoritesToStorage() {
 /**
  * 切换收藏状态（收藏/取消收藏）
  * @param {number} productId - 商品ID
+ * 实现方式：Array.indexOf() 判断是否已收藏 + push()/splice() 添加/移除
  */
 function toggleFavorite(productId) {
     if (!AppState.currentUser) {
@@ -522,6 +561,7 @@ function toggleFavorite(productId) {
  * 判断商品是否已收藏
  * @param {number} productId - 商品ID
  * @returns {boolean}
+ * 实现方式：Array.includes() 判断 productId 是否在收藏列表中
  */
 function isFavorited(productId) {
     return AppState.favorites.includes(productId);
@@ -531,6 +571,7 @@ function isFavorited(productId) {
  * 渲染收藏按钮 HTML
  * @param {number} productId - 商品ID
  * @returns {string} 收藏按钮 HTML
+ * 实现方式：模板字符串 `` 根据收藏状态生成不同 HTML
  */
 function renderFavoriteBtn(productId) {
     const favorited = isFavorited(productId);
@@ -561,6 +602,7 @@ function updateFavoriteBtns() {
 
 /**
  * 渲染收藏列表到收藏面板
+ * 实现方式：Array.map() + Array.find() 关联商品信息 + innerHTML 渲染
  */
 function renderFavoriteList(containerId = 'favorite-list') {
     const container = document.getElementById(containerId);
@@ -591,10 +633,14 @@ function renderFavoriteList(containerId = 'favorite-list') {
 
 // =====================================================
 // 十、搜索历史模块
+// 函数: loadSearchHistory()、saveSearchHistory()、
+//       addSearchHistory()、clearSearchHistory()
+// 实现方式：localStorage + Array.unshift()/pop() 维护历史队列
 // =====================================================
 
 /**
  * 从 LocalStorage 加载搜索历史
+ * 实现方式：localStorage.getItem() + JSON.parse() 反序列化
  */
 function loadSearchHistory() {
     const saved = localStorage.getItem('shop_searchHistory');
@@ -611,6 +657,7 @@ function saveSearchHistory() {
 /**
  * 添加搜索记录（去重，最多保留10条）
  * @param {string} keyword - 搜索关键词
+ * 实现方式：Array.filter() 去重 + Array.unshift() 插入队首 + Array.pop() 移除超量
  */
 function addSearchHistory(keyword) {
     // 移除重复项
@@ -634,12 +681,15 @@ function clearSearchHistory() {
 }
 
 // =====================================================
-// 十一、回到顶部按钮
+// 十一、回到顶部按钮 (initBackToTop)
+// 实现方式：document.createElement() 动态创建按钮 + window.scrollTo() 平滑滚动
+//            + addEventListener('scroll') 监听滚动位置控制显隐
 // =====================================================
 
 /**
  * 初始化回到顶部按钮
  * 滚动超过300px时显示，点击后平滑滚动到顶部
+ * 实现方式：window.scrollY 获取滚动位置 + classList.add/remove('show') 控制显隐
  */
 function initBackToTop() {
     // 创建按钮元素（如果还不存在）
@@ -665,14 +715,16 @@ function initBackToTop() {
 }
 
 // =====================================================
-// 十二、Toast 消息提示模块
+// 十二、Toast 消息提示模块 (showToast)
 // 页面顶部弹出提示消息，3秒后自动消失
+// 实现方式：document.createElement('div') 动态创建 + setTimeout() 定时移除
 // =====================================================
 
 /**
  * 显示 Toast 提示消息
  * @param {string} message - 提示文字
  * @param {string} type    - 类型: 'success' | 'error' | 'info'
+ * 实现方式：className 动态设置类型样式 + appendChild 插入 body + setTimeout 3秒后移除
  */
 function showToast(message, type = 'info') {
     // 移除已有的 toast，避免重叠
@@ -690,9 +742,11 @@ function showToast(message, type = 'info') {
 }
 
 // =====================================================
-// 十三、轮播图控制模块
+// 十三、轮播图控制模块 (initBanner)
 // 支持自动播放、手动切换、指示器点击
 // 页面隐藏时暂停轮播，节省资源
+// 实现方式：setInterval() 定时自动切换 + classList.add/remove('active') 切换显示
+//           + visibilitychange 事件监听页面可见性
 // =====================================================
 
 let bannerTimer = null;   // 轮播定时器
@@ -700,6 +754,7 @@ let bannerIndex = 0;      // 当前显示的轮播索引
 
 /**
  * 初始化轮播图功能
+ * 实现方式：setInterval() 每4秒自动调用 nextSlide + addEventListener 绑定箭头/指示器点击
  */
 function initBanner() {
     const slides = document.querySelectorAll('.banner-slide');
@@ -766,12 +821,15 @@ document.addEventListener('visibilitychange', () => {
 // 十四、订单管理模块
 // 创建订单、查询订单
 // 订单数据存储在 LocalStorage 中
+// 函数: createOrder()、getOrders()
+// 实现方式：Date.now() 生成订单号 + Array.unshift() 插入队首 + localStorage 持久化
 // =====================================================
 
 /**
  * 创建新订单
  * @param {Object} addressInfo - 收货地址信息 {name, phone, address}
  * @returns {Object|null} 创建的订单对象，失败返回 null
+ * 实现方式：对象字面量 {} 构建订单 + Array.unshift() 存入 LocalStorage
  */
 function createOrder(addressInfo) {
     // 验证登录状态
@@ -815,13 +873,15 @@ function getOrders() {
 }
 
 // =====================================================
-// 十五、工具函数
+// 十五、工具函数 (formatDate)
+// 实现方式：new Date() 解析日期 + 模板字符串 `` 拼接 + padStart() 补零
 // =====================================================
 
 /**
  * 格式化日期字符串为可读格式
  * @param {string} dateStr - ISO 日期字符串
  * @returns {string} 格式化后的日期，如 "2026-06-09 15:30"
+ * 实现方式：Date.getFullYear()/getMonth()/getDate() 获取各部分 + padStart(2,'0') 补零
  */
 function formatDate(dateStr) {
     const d = new Date(dateStr);
@@ -831,6 +891,7 @@ function formatDate(dateStr) {
 // =====================================================
 // 十六、导出全局函数（挂载到 window 对象）
 // 使这些函数可以在 HTML 页面的 onclick 中直接调用
+// 实现方式：window.函数名 = 函数名  将局部函数暴露为全局函数
 // =====================================================
 window.addToCart = addToCart;
 window.removeFromCart = removeFromCart;

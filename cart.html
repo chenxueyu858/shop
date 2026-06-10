@@ -54,6 +54,7 @@
     <!-- =============================================
          购物车内容区域
          支持空状态、登录提示、商品列表三种显示
+         实现方式：renderCart() 根据 AppState 状态动态切换显示内容
          ============================================= -->
     <main class="main-content">
         <div class="container">
@@ -134,11 +135,16 @@
     <script>
         // =============================================
         // 购物车页专属脚本
+        // 函数: renderCart()、updateCartSummary()、handleItemCheck()、
+        //       handleSelectAll()、changeItemQty()、changeItemQtyInput()、
+        //       handleDelete()、goCheckout()
+        // 实现方式：Array.map().join('') 动态渲染表格行 + Array.filter()/reduce() 计算汇总
         // =============================================
 
         /**
          * 渲染购物车内容
          * 根据登录状态和购物车是否为空显示不同界面
+         * 实现方式：innerHTML 替换内容 + style.display 控制三种状态切换
          */
         function renderCart() {
             const cartItemsEl = document.getElementById('cart-items');
@@ -204,6 +210,7 @@
         
         /**
          * 更新购物车底部结算信息
+         * 实现方式：Array.filter() 筛选选中商品 + Array.reduce() 计算总数/总金额
          */
         function updateCartSummary() {
             const checkedItems = AppState.cart.filter(i => i.checked);
@@ -237,6 +244,7 @@
          * 修改商品数量（+/-按钮）
          * @param {number} productId - 商品ID
          * @param {number} delta - 变化量
+         * 实现方式：Array.find() 定位商品 + updateCartQuantity() 更新 + renderCart() 刷新视图
          */
         function changeItemQty(productId, delta) {
             const item = AppState.cart.find(i => i.productId === productId);
@@ -260,6 +268,7 @@
         /**
          * 删除购物车商品
          * @param {number} productId - 商品ID
+         * 实现方式：removeFromCart() 全局函数删除 + showToast() 提示 + renderCart() 刷新
          */
         function handleDelete(productId) {
             removeFromCart(productId);
@@ -270,6 +279,7 @@
         /**
          * 去结算
          * 验证有选中商品后跳转到结算页
+         * 实现方式：Array.filter() 检查选中商品 + window.location.href 跳转
          */
         function goCheckout() {
             const checkedItems = AppState.cart.filter(i => i.checked);

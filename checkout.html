@@ -55,6 +55,7 @@
          左右两栏布局：
          左侧：收货地址 + 支付方式 + 订单商品列表
          右侧：订单汇总 + 提交按钮（sticky 定位）
+         实现方式：renderCheckout() 渲染页面 + placeOrder() 提交订单
          ============================================= -->
     <main class="main-content">
         <div class="container">
@@ -184,11 +185,15 @@
     <script>
         // =============================================
         // 结算页专属脚本
+        // 函数: renderCheckout()、updateSummary()、placeOrder()
+        // 实现方式：Array.filter() 获取选中商品 + Array.map().join('') 渲染商品列表
+        //           + createOrder() 创建订单 + setTimeout() 延迟跳转
         // =============================================
 
         /**
          * 渲染结算页面
          * 根据登录状态和购物车选中商品显示不同内容
+         * 实现方式：style.display 控制三种状态切换 + value 赋值预填用户信息
          */
         function renderCheckout() {
             // 检查登录状态
@@ -237,6 +242,7 @@
         
         /**
          * 更新订单汇总（总价等）
+         * 实现方式：getCartTotal() 计算选中商品总金额 + textContent 更新显示
          */
         function updateSummary() {
             const total = getCartTotal();
@@ -265,6 +271,7 @@
         /**
          * 提交订单
          * 验证表单 → 创建订单 → 跳转订单列表
+         * 实现方式：正则 test() 验证手机号 + createOrder() 全局函数创建订单 + setTimeout() 跳转
          */
         function placeOrder() {
             const name = document.getElementById('receiver-name').value.trim();

@@ -56,6 +56,7 @@
     <!-- =============================================
          商品详情区域
          左右两栏：图片画廊 + 商品信息
+         实现方式：loadProductDetail() 读取 JSON + renderProductDetail() 动态渲染 HTML
          ============================================= -->
     <main class="main-content">
         <div class="container">
@@ -96,12 +97,17 @@
     <script>
         // =============================================
         // 商品详情页专属脚本
+        // 函数: goToIndex()、loadProductDetail()、renderProductDetail()、
+        //       switchImage()、switchTab()、changeQty()、validateQty()、
+        //       addToCartWithQty()、buyNow()、updateDetailFavBtn()
+        // 实现方式：URLSearchParams 读取 URL 参数 + fetch() 加载 JSON + innerHTML 动态渲染
         // =============================================
 
         /**
          * 跳转到首页并按分类筛选
          * 使用 sessionStorage 跨页面传递分类信息
          * @param {string} cat - 分类名称
+         * 实现方式：sessionStorage.setItem() 存储分类 + window.location.href 跳转
          */
         function goToIndex(cat) {
             sessionStorage.setItem('shop_category', cat);
@@ -111,6 +117,7 @@
         /**
          * 加载商品详情
          * 从 URL 参数中获取商品 ID，然后从 JSON 中查找对应商品
+         * 实现方式：new URLSearchParams() 解析 URL 参数 + fetch() 异步请求 JSON
          */
         function loadProductDetail() {
             // 解析 URL 中的 id 参数（例如 product.html?id=1）
@@ -140,6 +147,7 @@
         /**
          * 渲染商品详情 HTML
          * @param {Object} product - 商品数据对象
+         * 实现方式：模板字符串 `` + Array.map().join('') 动态生成详情页 HTML
          */
         function renderProductDetail(product) {
             const container = document.getElementById('product-detail-container');
@@ -238,6 +246,7 @@
          * 切换主图显示
          * @param {string} src - 图片路径
          * @param {Element} el - 被点击的缩略图元素
+         * 实现方式：getElementById('main-image').src 替换主图 + classList 切换缩略图高亮
          */
         function switchImage(src, el) {
             document.getElementById('main-image').src = src;
@@ -249,6 +258,7 @@
          * 切换详情标签页
          * @param {Element} el - 被点击的标签头元素
          * @param {string} tabId - 目标内容区 ID
+         * 实现方式：querySelectorAll() + classList.add/remove('active') 切换标签
          */
         function switchTab(el, tabId) {
             document.querySelectorAll('.detail-tab-header').forEach(h => h.classList.remove('active'));
@@ -260,6 +270,7 @@
         /**
          * 修改购买数量（加减按钮）
          * @param {number} delta - 变化量（+1 或 -1）
+         * 实现方式：parseInt() 转数字 + Math.max()/Math.min() 限制范围
          */
         function changeQty(delta) {
             const input = document.getElementById('qty-input');
@@ -281,6 +292,7 @@
         /**
          * 加入购物车（读取当前选择的数量）
          * @param {number} productId - 商品ID
+         * 实现方式：getElementById('qty-input').value 读取数量 + 调用 addToCart() 全局函数
          */
         function addToCartWithQty(productId) {
             const qty = parseInt(document.getElementById('qty-input').value) || 1;
@@ -290,6 +302,7 @@
         /**
          * 立即购买：加入购物车后跳转到购物车页面
          * @param {number} productId - 商品ID
+         * 实现方式：addToCart() 添加商品 + setTimeout() 延迟跳转到 cart.html
          */
         function buyNow(productId) {
             const qty = parseInt(document.getElementById('qty-input').value) || 1;
@@ -302,6 +315,7 @@
         /**
          * 更新详情页收藏按钮状态
          * @param {number} productId - 商品ID
+         * 实现方式：getElementById() 获取按钮 + innerHTML 更新文字和图标
          */
         function updateDetailFavBtn(productId) {
             const btn = document.getElementById('detail-fav-btn');

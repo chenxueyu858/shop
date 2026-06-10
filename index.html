@@ -10,6 +10,7 @@
     <!-- =============================================
          顶部信息栏
          显示欢迎语、登录/注册、购物车入口
+         实现方式：HTML + CSS 静态布局，JS 通过 updateUserUI() 动态控制显示
          ============================================= -->
     <div class="top-bar">
         <div class="container">
@@ -33,6 +34,7 @@
     <!-- =============================================
          主头部
          Logo + 搜索框(带历史记录) + 个人中心/购物车
+         实现方式：HTML 静态结构 + initSearch() 绑定搜索事件 + updateCartBadge() 更新角标
          ============================================= -->
     <header class="main-header">
         <div class="container">
@@ -75,6 +77,7 @@
 
     <!-- =============================================
          轮播图（已隐藏，代码保留备用）
+         实现方式：initBanner() 控制轮播逻辑 + setInterval() 自动切换
          ============================================= -->
     <section class="banner-section">
         <div class="banner-container">
@@ -115,6 +118,7 @@
     <!-- =============================================
          主内容区域
          快捷入口 + 排序栏 + 商品列表
+         实现方式：renderProducts() 动态渲染商品卡片 + filterByCategory() 分类筛选 + setSortType() 排序
          ============================================= -->
     <main class="main-content">
         <!-- 快捷入口 - 5个分类图标，点击可快速筛选 -->
@@ -213,11 +217,14 @@
     <script>
         // =============================================
         // 首页专属脚本
+        // 函数: showSearchHistory()、hideSearchHistory()、useHistory()
+        // 实现方式：initBanner() 启动轮播 + sessionStorage 跨页面传参
         // =============================================
         
         /**
          * 页面加载完成后初始化轮播图
          * 以及恢复跨页面传递的分类筛选
+         * 实现方式：addEventListener('DOMContentLoaded') 监听加载完成事件
          */
         document.addEventListener('DOMContentLoaded', () => {
             initBanner();
@@ -232,10 +239,12 @@
 
         // =============================================
         // 【新功能】搜索历史面板交互
+        // 实现方式：classList.add/remove('show') 控制下拉面板显隐
         // =============================================
         
         /**
          * 显示搜索历史下拉面板
+         * 实现方式：Array.map().join('') 动态渲染历史列表 HTML
          */
         function showSearchHistory() {
             const panel = document.getElementById('search-history-panel');
@@ -260,6 +269,7 @@
         
         /**
          * 隐藏搜索历史面板
+         * 实现方式：classList.remove('show') 隐藏面板
          */
         function hideSearchHistory() {
             const panel = document.getElementById('search-history-panel');
@@ -269,6 +279,7 @@
         /**
          * 点击历史记录项，填入搜索框并执行搜索
          * @param {string} keyword - 搜索关键词
+         * 实现方式：input.value 赋值 + button.click() 模拟点击触发搜索
          */
         function useHistory(keyword) {
             document.getElementById('search-input').value = keyword;
