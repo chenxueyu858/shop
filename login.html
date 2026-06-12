@@ -9,39 +9,46 @@
 <body>
     <!-- =============================================
          登录/注册页面
-         居中卡片布局，渐变背景
-         标签切换登录/注册两个表单
-         实现方式：classList.add/remove('active') 切换标签 + addEventListener('submit') 处理表单
-         实现原理：.auth-page 使用 Flexbox + min-height:100vh 实现全屏居中。
-                  .auth-tab 使用 CSS 底部边框实现选中指示（透明→红色）。
-                  两个表单使用相同的 .auth-form 类，通过 .active 类控制显示/隐藏。
-                  表单验证使用正则表达式校验输入格式，错误时添加 .error 类显示红色边框和错误信息。
-                  用户数据存储在 LocalStorage 中（shop_users 数组），登录时用 Array.find() 查找匹配。
+         【答辩要点】全屏居中卡片式布局，渐变紫色背景。
+         使用双标签切换（登录/注册），通过 .active 类控制显隐。
+         表单验证：正则表达式 + 错误状态样式（.error/.success）。
+         用户数据存储在 LocalStorage 中（shop_users 数组）。
+         注册成功后自动登录。
+         
+         核心技术点：
+         - CSS Flexbox 垂直居中
+         - CSS 渐变背景（linear-gradient）
+         - 标签页切换（classList.add/remove）
+         - 正则表达式表单验证
+         - LocalStorage 用户数据管理
+         - 密码明文存储（课程设计简化，实际项目需加密）
          ============================================= -->
     <div class="auth-page">
         <div class="auth-container">
-            <!-- 头部 Logo -->
+            <!-- 头部 Logo：与首页一致的品牌标识 -->
             <div class="auth-header">
-                <a href="index.html" class="auth-logo">优选<span>商城</span></a>
-                <p>品质生活，尽在优选</p>
+                <a href="index.html" class="auth-logo">优选<span>商城</span></a>  <!-- "商城"红色 -->
+                <p>品质生活，尽在优选</p>  <!-- Slogan -->
             </div>
             
             <!-- 登录/注册切换标签 -->
+            <!-- data-tab 属性存储标签类型，JS 通过 dataset.tab 读取 -->
             <div class="auth-tabs">
-                <div class="auth-tab active" data-tab="login">登录</div>
+                <div class="auth-tab active" data-tab="login">登录</div>     <!-- 默认激活 -->
                 <div class="auth-tab" data-tab="register">注册</div>
             </div>
 
             <!-- ===== 登录表单 ===== -->
+            <!-- novalidate：禁用浏览器默认验证（使用自定义验证） -->
             <form class="auth-form active" id="login-form" novalidate>
                 <!-- 用户名/手机号输入 -->
                 <div class="form-group" id="login-username-group">
-                    <label>用户名 / 手机号</label>
+                    <label>用户名 / 手机号</label>  <!-- 支持两种方式登录 -->
                     <div class="input-wrapper">
-                        <span class="input-icon">👤</span>
+                        <span class="input-icon">👤</span>  <!-- 输入框内图标 -->
                         <input type="text" id="login-username" placeholder="请输入用户名或手机号" required>
                     </div>
-                    <span class="error-msg" id="login-username-error"></span>
+                    <span class="error-msg" id="login-username-error"></span>  <!-- 错误提示（默认隐藏） -->
                 </div>
                 <!-- 密码输入 -->
                 <div class="form-group" id="login-password-group">
@@ -49,12 +56,13 @@
                     <div class="input-wrapper">
                         <span class="input-icon">🔒</span>
                         <input type="password" id="login-password" placeholder="请输入密码" required>
+                        <!-- type="password"：浏览器自动隐藏输入内容 -->
                     </div>
                     <span class="error-msg" id="login-password-error"></span>
                 </div>
                 <!-- 提交按钮 -->
-                <button type="submit" class="btn-submit">登 录</button>
-                <!-- 记住密码 + 忘记密码 -->
+                <button type="submit" class="btn-submit">登 录</button>  <!-- 渐变背景按钮 -->
+                <!-- 辅助功能：记住密码 + 忘记密码 -->
                 <div class="form-extra">
                     <label><input type="checkbox" id="remember-me"> 记住密码</label>
                     <a href="javascript:void(0)">忘记密码？</a>
@@ -63,7 +71,7 @@
 
             <!-- ===== 注册表单 ===== -->
             <form class="auth-form" id="register-form" novalidate>
-                <!-- 用户名 -->
+                <!-- 用户名：4-20位字母、数字、下划线或中文 -->
                 <div class="form-group" id="reg-username-group">
                     <label>用户名</label>
                     <div class="input-wrapper">
@@ -72,7 +80,7 @@
                     </div>
                     <span class="error-msg" id="reg-username-error"></span>
                 </div>
-                <!-- 手机号 -->
+                <!-- 手机号：11位，1开头 -->
                 <div class="form-group" id="reg-phone-group">
                     <label>手机号</label>
                     <div class="input-wrapper">
@@ -81,7 +89,7 @@
                     </div>
                     <span class="error-msg" id="reg-phone-error"></span>
                 </div>
-                <!-- 密码 -->
+                <!-- 密码：6-20位，含字母和数字 -->
                 <div class="form-group" id="reg-password-group">
                     <label>密码</label>
                     <div class="input-wrapper">
@@ -90,7 +98,7 @@
                     </div>
                     <span class="error-msg" id="reg-password-error"></span>
                 </div>
-                <!-- 确认密码 -->
+                <!-- 确认密码：必须与密码一致 -->
                 <div class="form-group" id="reg-confirm-group">
                     <label>确认密码</label>
                     <div class="input-wrapper">
@@ -99,9 +107,9 @@
                     </div>
                     <span class="error-msg" id="reg-confirm-error"></span>
                 </div>
-                <!-- 提交 -->
+                <!-- 提交按钮 -->
                 <button type="submit" class="btn-submit">注 册</button>
-                <!-- 用户协议 -->
+                <!-- 用户协议复选框（默认勾选） -->
                 <div class="form-extra">
                     <label><input type="checkbox" id="agree-terms" checked> 同意《用户协议》和《隐私政策》</label>
                 </div>
@@ -109,44 +117,44 @@
         </div>
     </div>
 
+    <!-- 引入核心 JS -->
     <script src="js/app.js"></script>
     <script>
         // =============================================
         // 登录/注册页专属脚本
-        // 函数: showFieldError()、clearFieldError()、clearAllErrors()
-        // 实现方式：addEventListener('submit') 表单验证 + localStorage 用户数据管理
-        //           + 正则表达式验证输入格式
-        // 实现原理：整个认证系统分为前端验证和后端模拟两部分。
-        //           前端验证：通过正则表达式实时检查用户名/手机号/密码格式，
-        //           使用 .error/.success 类即时反馈验证结果。
-        //           后端模拟：将用户数据以 JSON 格式存储在 LocalStorage 中，
-        //           注册时 push 新用户到数组，登录时 find 匹配用户名+密码。
-        //           这是一种纯前端的状态管理方案，适合课程设计演示。
+        // 【答辩要点】整个认证系统分为：
+        //   1. 前端验证：正则表达式实时检查输入格式
+        //   2. 后端模拟：LocalStorage 存储用户数据
+        //   3. UI 交互：标签切换、错误状态反馈
+        // 
+        // 关键函数：
+        //   - showFieldError()：显示字段错误（红色边框+错误文字）
+        //   - clearFieldError()：清除字段错误（绿色边框）
+        //   - clearAllErrors()：清除所有字段错误
         // =============================================
 
-        // ===== 标签切换 =====
+        // ===== 标签切换逻辑 =====
         /**
-         * 点击登录/注册标签切换表单显示
-         * 实现方式：querySelectorAll().forEach() 绑定点击 + classList.add/remove('active') 切换
-         * 实现原理：先移除所有标签和表单的 .active 类（清空状态），
-         *           再为目标标签和对应表单添加 .active 类（设置新状态）。
-         *           表单的 id 命名规则为 {tab}-form，通过 dataset.tab 动态拼接。
-         *           URL hash 检测：若 URL 含 #register 则自动切换到注册标签。
+         * 点击登录/注册标签切换表单
+         * 【答辩要点】先清除所有 active 状态，再激活目标标签。
+         * 表单 ID 命名规则：{tab}-form（如 login-form、register-form）。
+         * URL hash 检测：login.html#register 自动切换到注册标签。
          */
         document.querySelectorAll('.auth-tab').forEach(tab => {
             tab.addEventListener('click', () => {
-                const targetTab = tab.dataset.tab;
-                // 移除所有 active 状态
+                const targetTab = tab.dataset.tab;  // 读取 data-tab 属性值
+                // 步骤1：清除所有标签和表单的 active 状态
                 document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
                 document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
-                // 激活选中的标签和表单
+                // 步骤2：激活目标标签和对应表单
                 tab.classList.add('active');
                 document.getElementById(targetTab + '-form').classList.add('active');
             });
         });
 
-        // 如果 URL 中有 #register，自动切换到注册标签
+        // URL hash 自动切换（如 login.html#register）
         if (window.location.hash === '#register') {
+            // 触发注册标签的 click 事件
             document.querySelector('[data-tab="register"]').click();
         }
 
@@ -157,61 +165,65 @@
          * @param {string} groupId - form-group 的 ID
          * @param {string} errorId - 错误提示 span 的 ID
          * @param {string} message - 错误提示文字
-         * 实现方式：classList.add('error') 设置红色边框 + textContent 显示错误信息
-         * 实现原理：通过 CSS 类 .error 触发样式变化（边框变红、错误信息显示），
-         *           .success 类触发边框变绿。两个类是互斥的（add error 时 remove success）。
-         *           textContent 安全地设置纯文本内容，避免 innerHTML 可能的 XSS 风险。
+         * 【答辩要点】通过 classList 操作 CSS 类来改变视觉效果。
+         * .error 类 → 红色边框 + 显示错误文字
+         * .success 类 → 绿色边框
+         * 两个类是互斥的（同时只存在一个）。
          */
         function showFieldError(groupId, errorId, message) {
-            const group = document.getElementById(groupId);
-            const error = document.getElementById(errorId);
-            group.classList.add('error');       // 输入框变红
-            group.classList.remove('success');
-            error.textContent = message;
-            return false;
+            const group = document.getElementById(groupId);    // 表单项容器
+            const error = document.getElementById(errorId);    // 错误信息元素
+            group.classList.add('error');      // 添加错误类（CSS：红色边框）
+            group.classList.remove('success'); // 移除成功类
+            error.textContent = message;       // 设置错误文字
+            return false;  // 返回 false 方便在验证逻辑中直接使用
         }
 
         /**
-         * 清除表单字段错误，标记为成功状态
+         * 清除表单字段错误，标记为成功
          * @param {string} groupId - form-group 的 ID
-         * 实现方式：classList.remove('error') + classList.add('success') 切换状态样式
          */
         function clearFieldError(groupId) {
             const group = document.getElementById(groupId);
-            group.classList.remove('error');
-            group.classList.add('success');     // 输入框变绿
+            group.classList.remove('error');    // 移除错误类
+            group.classList.add('success');     // 添加成功类（CSS：绿色边框）
         }
 
         /**
          * 清除表单所有字段的错误状态
          * @param {string} formId - 表单 ID
+         * 【答辩要点】批量操作：同时清除所有 form-group 的 error/success 类
+         * 和所有 error-msg 的文字内容。
          */
         function clearAllErrors(formId) {
+            // 清除所有表单项的样式类
             document.querySelectorAll(`#${formId} .form-group`).forEach(g => {
                 g.classList.remove('error', 'success');
             });
+            // 清除所有错误提示文字
             document.querySelectorAll(`#${formId} .error-msg`).forEach(e => {
                 e.textContent = '';
             });
         }
 
         // ===== 登录表单提交处理 =====
-        // 实现方式：addEventListener('submit') 监听提交 + Array.find() 查找用户验证
-        // 实现原理：e.preventDefault() 阻止表单的默认提交行为（页面刷新），
-        //           改为 JS 手动处理登录逻辑。先验证输入格式，再在 LocalStorage 的
-        //           shop_users 数组中用 find() 查找匹配的用户名/手机号 + 密码。
-        //           支持用户名或手机号两种方式登录（用 || 连接两个条件）。
-        //           登录成功后，将用户信息（不含密码）存入 shop_currentUser，
-        //           然后恢复购物车数据，更新 UI，1 秒后跳转首页。
+        /**
+         * 【答辩要点】登录流程：
+         *   1. e.preventDefault() 阻止表单默认提交（页面刷新）
+         *   2. 前端验证输入格式
+         *   3. 从 LocalStorage 查找匹配用户
+         *   4. 支持用户名或手机号登录（|| 连接两个条件）
+         *   5. 成功后保存登录状态 → 跳转首页
+         */
         document.getElementById('login-form').addEventListener('submit', function(e) {
-            e.preventDefault();  // 阻止表单默认提交行为
-            clearAllErrors('login-form');
+            e.preventDefault();  // ★ 阻止默认提交行为
+            clearAllErrors('login-form');  // 清除之前的错误状态
             
-            const username = document.getElementById('login-username').value.trim();
+            const username = document.getElementById('login-username').value.trim();  // 去除首尾空格
             const password = document.getElementById('login-password').value.trim();
-            let isValid = true;
+            let isValid = true;  // 验证标志
 
-            // 验证用户名（不能为空，至少2位）
+            // 验证用户名：不为空，至少2位
             if (!username) {
                 showFieldError('login-username-group', 'login-username-error', '请输入用户名或手机号');
                 isValid = false;
@@ -222,7 +234,7 @@
                 clearFieldError('login-username-group');
             }
 
-            // 验证密码（不能为空，至少6位）
+            // 验证密码：不为空，至少6位
             if (!password) {
                 showFieldError('login-password-group', 'login-password-error', '请输入密码');
                 isValid = false;
@@ -233,47 +245,63 @@
                 clearFieldError('login-password-group');
             }
 
-            if (!isValid) return;
+            if (!isValid) return;  // 验证失败，停止提交
 
-            // 从 LocalStorage 查找用户（模拟后端数据库查询）
+            // ★ 从 LocalStorage 查找用户（模拟后端数据库查询）
             const users = JSON.parse(localStorage.getItem('shop_users') || '[]');
-            // 支持用户名或手机号登录
+            // find() 查找第一个匹配的用户
+            // || 运算符：用户名匹配 或 手机号匹配，且密码一致
             const user = users.find(u => 
                 (u.username === username || u.phone === username) && u.password === password
             );
 
             if (user) {
-                // 登录成功：保存当前用户信息到 LocalStorage
+                // === 登录成功 ===
+                // 构建当前用户对象（不含密码，安全考虑）
                 const currentUser = {
                     id: user.id,
                     name: user.username,
                     phone: user.phone,
                 };
+                // 保存到 LocalStorage（持久化登录状态）
                 localStorage.setItem('shop_currentUser', JSON.stringify(currentUser));
+                // 更新内存中的状态
                 AppState.currentUser = currentUser;
-                loadCartFromStorage();       // 恢复购物车
-                updateUserUI();              // 更新界面
-                updateCartBadge();
+                loadCartFromStorage();   // 恢复该用户的购物车
+                updateUserUI();          // 更新界面（显示用户名）
+                updateCartBadge();       // 更新购物车角标
                 
                 showToast('登录成功！欢迎回来', 'success');
+                // 延迟 1 秒跳转（让用户看到提示）
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 1000);
             } else {
+                // === 登录失败 ===
                 showFieldError('login-password-group', 'login-password-error', '用户名或密码错误');
             }
         });
 
         // ===== 注册表单提交处理 =====
-        // 实现方式：addEventListener('submit') 监听 + 正则 test() 验证 + localStorage 存储用户
-        // 实现原理：逐字段验证格式（正则 test()），验证通过后构建新用户对象，
-        //           Date.now() 生成唯一 ID，push 到 shop_users 数组并写回 LocalStorage。
-        //           注册成功后自动登录（设置 shop_currentUser），1 秒后跳转首页。
-        //           正则表达式：(?=.*[A-Za-z]) 是正向先行断言，确保字符串包含字母，
-        //           (?=.*\d) 确保包含数字，实现"必须同时包含字母和数字"的密码规则。
+        /**
+         * 【答辩要点】注册流程：
+         *   1. 逐字段正则验证（用户名/手机号/密码/确认密码）
+         *   2. 检查用户名和手机号是否已注册（去重）
+         *   3. 保存新用户到 LocalStorage
+         *   4. 注册成功自动登录 → 跳转首页
+         * 
+         * 正则表达式说明：
+         *   - 用户名：/^[a-zA-Z0-9_\u4e00-\u9fa5]{4,20}$/
+         *     允许字母、数字、下划线、中文，4-20位
+         *   - 手机号：/^1[3-9]\d{9}$/
+         *     1开头，第二位3-9，后9位数字
+         *   - 密码：/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{6,20}$/
+         *     (?=.*[A-Za-z]) 正向先行断言：必须包含字母
+         *     (?=.*\d) 正向先行断言：必须包含数字
+         */
         document.getElementById('register-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            clearAllErrors('register-form');
+            e.preventDefault();  // 阻止默认提交
+            clearAllErrors('register-form');  // 清除错误状态
             
             const username = document.getElementById('reg-username').value.trim();
             const phone = document.getElementById('reg-phone').value.trim();
@@ -282,12 +310,13 @@
             const agreeTerms = document.getElementById('agree-terms').checked;
             let isValid = true;
 
-            // 验证用户名（4-20位字母、数字、下划线或中文）
+            // === 验证用户名 ===
             const usernameRegex = /^[a-zA-Z0-9_\u4e00-\u9fa5]{4,20}$/;
             if (!username) {
                 showFieldError('reg-username-group', 'reg-username-error', '请输入用户名');
                 isValid = false;
             } else if (!usernameRegex.test(username)) {
+                // test() 方法：正则匹配成功返回 true，失败返回 false
                 showFieldError('reg-username-group', 'reg-username-error', '用户名为4-20位字母、数字、下划线或中文');
                 isValid = false;
             } else {
@@ -301,8 +330,8 @@
                 }
             }
 
-            // 验证手机号（11位，1开头，第二位3-9）
-            const phoneRegex = /^1[3-9]\d{9}$/;
+            // === 验证手机号 ===
+            const phoneRegex = /^1[3-9]\d{9}$/;  // 1开头，第二位3-9，后面9位数字
             if (!phone) {
                 showFieldError('reg-phone-group', 'reg-phone-error', '请输入手机号');
                 isValid = false;
@@ -310,6 +339,7 @@
                 showFieldError('reg-phone-group', 'reg-phone-error', '请输入正确的11位手机号');
                 isValid = false;
             } else {
+                // 检查手机号是否已被注册
                 const users = JSON.parse(localStorage.getItem('shop_users') || '[]');
                 if (users.find(u => u.phone === phone)) {
                     showFieldError('reg-phone-group', 'reg-phone-error', '该手机号已被注册');
@@ -319,7 +349,9 @@
                 }
             }
 
-            // 验证密码（6-20位，必须包含字母和数字）
+            // === 验证密码 ===
+            // (?=.*[A-Za-z]) 正向先行断言：确保包含至少一个字母
+            // (?=.*\d) 正向先行断言：确保包含至少一个数字
             const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{6,20}$/;
             if (!password) {
                 showFieldError('reg-password-group', 'reg-password-error', '请输入密码');
@@ -331,7 +363,7 @@
                 clearFieldError('reg-password-group');
             }
 
-            // 确认密码一致性验证
+            // === 验证确认密码 ===
             if (!confirm) {
                 showFieldError('reg-confirm-group', 'reg-confirm-error', '请确认密码');
                 isValid = false;
@@ -342,27 +374,27 @@
                 clearFieldError('reg-confirm-group');
             }
 
-            // 用户协议必须勾选
+            // === 验证用户协议 ===
             if (!agreeTerms) {
                 showToast('请同意用户协议和隐私政策', 'error');
                 isValid = false;
             }
 
-            if (!isValid) return;
+            if (!isValid) return;  // 验证失败，停止注册
 
-            // 注册成功：保存新用户到 LocalStorage
+            // === 注册成功：保存新用户 ===
             const users = JSON.parse(localStorage.getItem('shop_users') || '[]');
             const newUser = {
-                id: 'U' + Date.now(),          // 使用时间戳生成唯一用户ID
-                username: username,
-                phone: phone,
-                password: password,            // 实际项目中应该加密存储
-                registerTime: new Date().toISOString(),
+                id: 'U' + Date.now(),           // 使用时间戳生成唯一用户ID
+                username: username,             // 用户名
+                phone: phone,                   // 手机号
+                password: password,             // ★ 明文存储（实际项目需加密！）
+                registerTime: new Date().toISOString(),  // 注册时间
             };
-            users.push(newUser);
-            localStorage.setItem('shop_users', JSON.stringify(users));
+            users.push(newUser);  // 添加到用户数组
+            localStorage.setItem('shop_users', JSON.stringify(users));  // 写回 LocalStorage
 
-            // 注册后自动登录
+            // === 注册后自动登录 ===
             const currentUser = {
                 id: newUser.id,
                 name: newUser.username,
@@ -370,25 +402,25 @@
             };
             localStorage.setItem('shop_currentUser', JSON.stringify(currentUser));
             AppState.currentUser = currentUser;
-            updateUserUI();
+            updateUserUI();  // 更新界面
             
             showToast('注册成功！欢迎加入优选商城', 'success');
             setTimeout(() => {
-                window.location.href = 'index.html';
+                window.location.href = 'index.html';  // 1秒后跳转首页
             }, 1000);
         });
 
-        // ===== 实时验证（输入框失焦时触发） =====
-        // 提高用户体验，在离开输入框时即时提示格式错误
-        // 实现方式：addEventListener('blur') 监听失焦事件 + 正则 test() 即时校验
-        // 实现原理：blur 事件在元素失去焦点时触发，此时用户已完成输入并切换到下一个字段。
-        //           实时校验可以即时反馈错误，减少提交时的错误数量，提升用户体验。
-        //           注意：实时校验只在有输入内容时触发（val 非空），避免空白时误报错。
-        //           失焦校验比 input 事件更友好——不会在用户输入过程中频繁打断。
-        //           确认密码的校验还额外读取密码框的值进行对比验证。
+        // ===== 实时验证（失焦时触发） =====
+        /**
+         * 【答辩要点】blur 事件在输入框失去焦点时触发。
+         * 实时校验可以在用户完成输入后立即反馈，减少提交时的错误。
+         * 只在有输入内容时校验（val 非空），避免空白时误报。
+         * 比 input 事件更友好：不会在输入过程中频繁打断用户。
+         */
         
+        // 用户名字段失焦验证
         document.getElementById('reg-username').addEventListener('blur', function() {
-            const val = this.value.trim();
+            const val = this.value.trim();  // this 指向当前输入框
             const regex = /^[a-zA-Z0-9_\u4e00-\u9fa5]{4,20}$/;
             if (val && !regex.test(val)) {
                 showFieldError('reg-username-group', 'reg-username-error', '格式不正确');
@@ -397,6 +429,7 @@
             }
         });
 
+        // 手机号字段失焦验证
         document.getElementById('reg-phone').addEventListener('blur', function() {
             const val = this.value.trim();
             const regex = /^1[3-9]\d{9}$/;
@@ -407,6 +440,7 @@
             }
         });
 
+        // 密码字段失焦验证
         document.getElementById('reg-password').addEventListener('blur', function() {
             const val = this.value.trim();
             const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{6,20}$/;
@@ -417,9 +451,10 @@
             }
         });
 
+        // 确认密码失焦验证（额外校验与密码是否一致）
         document.getElementById('reg-confirm').addEventListener('blur', function() {
             const val = this.value.trim();
-            const pwd = document.getElementById('reg-password').value.trim();
+            const pwd = document.getElementById('reg-password').value.trim();  // 读取密码框的值
             if (val && val !== pwd) {
                 showFieldError('reg-confirm-group', 'reg-confirm-error', '密码不一致');
             } else if (val) {

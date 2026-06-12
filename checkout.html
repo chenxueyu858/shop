@@ -8,7 +8,37 @@
 </head>
 <body>
     <!-- =============================================
+         【答辩要点】checkout.html 是整个购物流程的终点
+         用户在购物车页面选中商品后点击"去结算"，跳转到此页面完成下单。
+         
+         完整购物流程：
+           浏览商品 → 加入购物车 → 购物车管理 → 结算确认 → 提交订单 → 查看订单
+         
+         本页面的核心职责：
+           1. 展示待结算商品（只读，不允许修改数量）
+           2. 收集收货信息（姓名、手机号、地址）
+           3. 选择支付方式（微信/支付宝/银行卡）
+           4. 显示订单汇总金额（商品总价 + 运费 + 应付总额）
+           5. 提交订单（验证表单 → 创建订单 → 清空已购商品 → 跳转）
+         
+         技术要点：
+           - 三种视图状态切换（未登录 / 无商品 / 正常结算）
+           - CSS Grid 双栏布局（左侧表单 + 右侧汇总 sticky 固定）
+           - 事件委托实现支付方式切换高亮
+           - 正则表达式验证手机号格式
+           - LocalStorage 持久化订单数据
+         
+         关键函数：
+           renderCheckout() - 渲染结算页面，判断状态 + 预填用户信息 + 渲染商品列表
+           updateSummary()  - 更新右侧金额汇总
+           placeOrder()     - 提交订单：验证 → 创建 → 跳转
+         ============================================= -->
+    <!-- =============================================
          顶部信息栏 + 主头部（与首页共用）
+         【答辩要点】头部组件在所有页面保持一致，体现了"组件复用"的设计思想。
+         由于是纯 HTML 项目，没有使用前端框架的组件化（如 Vue 组件），
+         所以采用"手动复制 HTML 结构"的方式实现复用。
+         实际生产项目中会使用模板引擎（EJS/Pug）或前端框架来解决这个问题。
          ============================================= -->
     <div class="top-bar">
         <div class="container">
@@ -19,6 +49,7 @@
             </div>
             <div class="right-links">
                 <a href="login.html" class="login-link">登录</a>
+                <!-- 登录后通过 JS 切换显示 -->
                 <span class="user-info" style="display:none;"></span>
                 <button class="btn-logout" style="display:none;" onclick="logout()">退出</button>
                 <a href="cart.html">购物车 <span id="cart-badge" class="badge" style="display:none;">0</span></a>
@@ -51,107 +82,223 @@
     </header>
 
     <!-- =============================================
-         结算页面
-         左右两栏布局：
-         左侧：收货地址 + 支付方式 + 订单商品列表
-         右侧：订单汇总 + 提交按钮（sticky 定位）
-         实现方式：renderCheckout() 渲染页面 + placeOrder() 提交订单
-         实现原理：结算页是购物流程的最后一步，从 AppState.cart 中读取选中的商品。
-                  三种状态切换：未登录 → 登录提示，无选中商品 → 返回购物车，正常 → 结算表单。
-                  左侧表单包含收货地址（从 LocalStorage 预填）、支付方式（radio 单选）、商品列表。
-                  右侧汇总使用 position:sticky 固定在视口，始终可见。
-                  支付方式切换时通过事件委托监听 change 事件，动态修改 label 边框样式。
-                  提交订单时验证表单 → createOrder() 创建订单 → 跳转订单列表。
+         结算页面主体
+         
+         【答辩要点】为什么用三种视图状态的设计？
+         一个页面可能面临多种边界情况（edge cases），不能只考虑"正常情况"。
+         这里的三种状态覆盖了所有可能：
+           状态1 - 未登录：用户直接访问 checkout.html 但没有登录
+           状态2 - 无选中商品：用户访问但购物车中没有勾选的商品
+           状态3 - 正常结算：登录且有选中商品，展示结算表单
+         
+         如果不处理状态1和2，用户会看到空白页面，体验很差。
+         这种"空状态处理"是前端开发的重要实践。
+         
+         布局方案：
+           左右双栏 Grid 布局（checkout-grid）
+           左侧：收货地址 + 支付方式 + 订单商品列表（占据主要空间）
+           右侧：订单汇总 + 提交按钮（使用 position:sticky 固定跟随滚动）
+           sticky 的好处：用户在左侧滚动查看商品时，右侧汇总始终可见，
+           方便用户随时确认总金额并提交，不需要滚回页面顶部。
          ============================================= -->
     <main class="main-content">
         <div class="container">
             <div class="checkout-page">
                 <h2 style="font-size:24px;font-weight:700;margin-bottom:24px;">确认订单</h2>
                 
-                <!-- 状态1：未登录提示 -->
+                <!-- =============================================
+                     状态1：未登录提示
+                     【答辩要点】防御性编程：用户可能直接输入 URL 访问此页面，
+                     此时如果没有登录，不应该展示结算表单（因为没有用户信息），
+                     而是给出友好提示并引导去登录。
+                     display:none 初始隐藏，renderCheckout() 根据状态决定显示哪个。
+                     ============================================= -->
                 <div id="checkout-not-login" style="display:none;text-align:center;padding:80px;">
                     <p style="font-size:18px;color:#999;margin-bottom:20px;">请先登录后再结算</p>
                     <a href="login.html" class="btn-go-shopping">去登录</a>
                 </div>
 
-                <!-- 状态2：无选中商品 -->
+                <!-- =============================================
+                     状态2：无选中商品
+                     【答辩要点】另一种边界情况：用户登录了，但购物车中没有勾选的商品。
+                     可能原因：用户在购物车页面全部取消选中，或商品被清空。
+                     此时引导用户返回购物车重新选择。
+                     ============================================= -->
                 <div id="checkout-empty" style="display:none;text-align:center;padding:80px;">
                     <p style="font-size:18px;color:#999;margin-bottom:20px;">没有待结算的商品</p>
                     <a href="cart.html" class="btn-go-shopping">返回购物车</a>
                 </div>
 
-                <!-- 状态3：结算表单 -->
+                <!-- =============================================
+                     状态3：正常结算表单
+                     【答辩要点】这是核心结算 UI，采用 CSS Grid 双栏布局。
+                     
+                     Grid 布局配置（在 style.css 中定义）：
+                       .checkout-grid { display: grid; grid-template-columns: 1fr 360px; gap: 24px; }
+                      左侧 1fr：占据剩余空间（自适应宽度）
+                      右侧 360px：固定宽度（汇总面板不需要太宽）
+                     
+                     为什么选择 Grid 而不是 Flexbox？
+                       Grid 更适合二维布局（行+列同时控制），
+                       而 Flexbox 更适合一维布局（单行或单列）。
+                       这里的双栏布局用 Grid 更直观：一行两列，左侧自适应右侧固定。
+                     ============================================= -->
                 <div class="checkout-grid" id="checkout-content">
-                    <!-- ===== 左侧：表单区 ===== -->
+                    <!-- =============================================
+                         左侧：表单区
+                         【答辩要点】左侧包含三个区块，从上到下依次排列：
+                           1. 收货地址表单 - 三个必填字段（姓名、手机号、地址）
+                           2. 支付方式选择 - radio 单选按钮组
+                           3. 订单商品列表 - 动态渲染的已选商品清单
+                         
+                         设计思路：结算表单的核心是"信息收集"，
+                         收货地址 → 物流信息，支付方式 → 支付渠道，商品列表 → 订单明细。
+                         三个字段都标记了 * 号表示必填，提交时会验证。
+                         
+                         为什么用 input 的 type="tel" 而不是 type="text"？
+                           type="tel" 在移动端会自动弹出数字键盘，方便用户输入手机号，
+                           提升移动端用户体验（移动端优先的设计理念）。
+                         ============================================= -->
                     <div class="checkout-left">
                         <!-- 收货地址表单 -->
                         <div class="checkout-section">
                             <h3>📍 收货地址</h3>
+                            <!-- form-row 使用 flex 布局让姓名和手机号并排显示 -->
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>收货人 *</label>
+                                    <label>收货人 *</label>  <!-- * 表示必填字段 -->
                                     <div class="input-wrapper">
                                         <input type="text" id="receiver-name" placeholder="请输入收货人姓名" style="padding-left:16px;">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label>手机号 *</label>
+                                    <label>手机号 *</label>  <!-- * 表示必填字段 -->
                                     <div class="input-wrapper">
+                                        <!-- type="tel"：移动端弹出数字键盘，提升输入体验 -->
                                         <input type="tel" id="receiver-phone" placeholder="请输入收货手机号" style="padding-left:16px;">
                                     </div>
                                 </div>
                             </div>
+                            <!-- full-width 让地址输入框占满整行 -->
                             <div class="form-group full-width" style="margin-top:16px;">
-                                <label>详细地址 *</label>
+                                <label>详细地址 *</label>  <!-- * 表示必填字段 -->
                                 <div class="input-wrapper">
                                     <input type="text" id="receiver-address" placeholder="省/市/区/详细地址" style="padding-left:16px;">
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 支付方式选择 -->
+                        <!-- =============================================
+                             支付方式选择
+                             【答辩要点】使用 radio 按钮组实现单选（互斥选择）。
+                             
+                             为什么用 radio 而不是 select 下拉框？
+                               radio 将所有选项平铺展示，用户一眼能看到所有支付方式，
+                               比下拉框更直观，适合选项较少（≤5个）的场景。
+                             
+                             name="payment" 的作用：
+                               同一 name 的 radio 按钮自动互斥——选中一个会自动取消另一个。
+                               这是 HTML 原生行为，不需要 JS 控制。
+                             
+                             默认选中微信支付（checked 属性）：
+                               微信支付是中国最常用的移动支付方式，设为默认减少用户操作。
+                             
+                             支付方式切换的高亮效果：
+                               通过 JS 事件委托（document.addEventListener('change')）实现。
+                               当 radio 状态变化时，遍历所有 label，给选中的加红色边框。
+                               为什么用事件委托而不是给每个 radio 绑定事件？
+                                 事件委托只需要一个监听器，代码更简洁，性能更好。
+                               为什么修改的是 label 的样式而不是 radio 本身？
+                                 radio 的默认样式很难自定义，而 label 包裹了 radio+文字，
+                                 修改 label 的边框和背景就能实现视觉上的选中效果。
+                             ============================================= -->
                         <div class="checkout-section">
                             <h3>💳 支付方式</h3>
+                            <!-- flex 布局 + flex-wrap:wrap 让选项在小屏幕自动换行 -->
                             <div style="display:flex;gap:16px;flex-wrap:wrap;">
-                                <!-- 微信支付（默认选中） -->
+                                <!-- 微信支付（默认选中：checked 属性 + 红色边框高亮） -->
                                 <label style="display:flex;align-items:center;gap:8px;padding:12px 20px;border:2px solid var(--primary);border-radius:8px;cursor:pointer;background:var(--primary-light);">
                                     <input type="radio" name="payment" value="wechat" checked style="accent-color:var(--primary);"> 微信支付
                                 </label>
-                                <!-- 支付宝 -->
+                                <!-- 支付宝（未选中：灰色边框） -->
                                 <label style="display:flex;align-items:center;gap:8px;padding:12px 20px;border:2px solid var(--border);border-radius:8px;cursor:pointer;">
                                     <input type="radio" name="payment" value="alipay" style="accent-color:var(--primary);"> 支付宝
                                 </label>
-                                <!-- 银行卡 -->
+                                <!-- 银行卡（未选中：灰色边框） -->
                                 <label style="display:flex;align-items:center;gap:8px;padding:12px 20px;border:2px solid var(--border);border-radius:8px;cursor:pointer;">
                                     <input type="radio" name="payment" value="card" style="accent-color:var(--primary);"> 银行卡
                                 </label>
                             </div>
                         </div>
 
-                        <!-- 订单商品列表 -->
+                        <!-- =============================================
+                             订单商品列表
+                             【答辩要点】这是结算页的商品确认区域。
+                             与购物车页面不同，这里只展示"已选中"的商品，且只读不可修改。
+                             
+                             id="checkout-items" 是 JS 动态渲染的容器：
+                               在 renderCheckout() 中，通过 checkedItems.map().join('') 
+                               生成 HTML 字符串，然后用 innerHTML 插入。
+                             
+                             每行商品显示三部分：
+                               缩略图（co-image） → 名称+单价×数量（co-info） → 小计金额（co-total）
+                             
+                             为什么结算页不提供修改数量的功能？
+                               购物车是"编辑"的地方，结算页是"确认"的地方。
+                               单一职责原则：每个页面只做一件事。
+                               如果结算页也能修改数量，会导致与购物车数据不同步的问题。
+                             ============================================= -->
                         <div class="checkout-section">
                             <h3>📦 订单商品</h3>
+                            <!-- 动态渲染容器：JS 通过 innerHTML 填充商品列表 -->
                             <div class="checkout-items" id="checkout-items"></div>
                         </div>
                     </div>
 
-                    <!-- ===== 右侧：结算汇总（sticky 跟随滚动） ===== -->
+                    <!-- =============================================
+                         右侧：结算汇总面板
+                         【答辩要点】右侧使用 position:sticky 固定在视口中。
+                         
+                         sticky 定位的工作原理：
+                           当页面滚动到该元素时，它会"粘"在指定位置（top 值），
+                           不会随页面继续滚动。当滚动回原位时，恢复正常的文档流位置。
+                         
+                         sticky vs fixed 的区别：
+                           fixed 始终固定在视口，脱离文档流，需要手动设置宽度。
+                           sticky 在到达阈值前正常排列，到达后固定，不脱离文档流。
+                           这里用 sticky 更好：在内容较少时正常显示，内容多时固定跟随。
+                         
+                         汇总信息包含：
+                           商品总价（summary-subtotal）：从 getCartTotal() 获取
+                           运费（summary-freight）：本系统免运费（简化设计）
+                           应付总额（summary-total）：商品总价 + 运费（突出显示）
+                           提交按钮：调用 placeOrder() 函数
+                         
+                         为什么把汇总放在右侧而不是底部？
+                           心理学原理：用户阅读习惯是从左到右、从上到下。
+                           左侧浏览商品明细 → 右侧确认金额 → 点击提交，
+                           符合用户的视觉动线，减少眼球移动距离。
+                         ============================================= -->
                     <div class="checkout-right">
+                        <!-- 汇总面板：sticky 定位使其跟随滚动 -->
                         <div class="checkout-summary" id="checkout-summary">
                             <h3>订单汇总</h3>
+                            <!-- 商品总价：JS 动态更新 textContent -->
                             <div class="summary-row">
                                 <span>商品总价</span>
-                                <span id="summary-subtotal">¥0.00</span>
+                                <span id="summary-subtotal">¥0.00</span>  <!-- 默认占位，renderCheckout 时更新 -->
                             </div>
+                            <!-- 运费：本项目简化设计，一律免运费 -->
                             <div class="summary-row">
                                 <span>运费</span>
                                 <span id="summary-freight">免运费</span>
                             </div>
-                            <!-- 应付总额（突出显示） -->
+                            <!-- 应付总额：加 total 类名，CSS 中加大字号和加粗 -->
                             <div class="summary-row total">
                                 <span>应付总额</span>
-                                <span id="summary-total">¥0.00</span>
+                                <span id="summary-total">¥0.00</span>  <!-- 默认占位，renderCheckout 时更新 -->
                             </div>
+                            <!-- ★ 提交订单按钮：整个结算流程的终点 -->
                             <button class="btn-place-order" onclick="placeOrder()">提交订单</button>
                         </div>
                     </div>
@@ -160,7 +307,12 @@
         </div>
     </main>
 
-    <!-- 页脚 -->
+    <!-- =============================================
+         页脚（所有页面共用）
+         【答辩要点】footer 使用 CSS Grid 四列布局（footer-grid），
+         每列包含一组导航链接，覆盖购物指南、配送方式、支付方式、售后服务四个维度。
+         底部版权信息包含学号和姓名，用于课程答辩展示。
+         ============================================= -->
     <footer class="site-footer">
         <div class="container">
             <div class="footer-grid">
@@ -187,99 +339,222 @@
         </div>
     </footer>
 
+    <!-- =============================================
+         引入核心 JS 文件
+         【答辩要点】app.js 包含所有共享的业务逻辑函数。
+         通过 <script src="js/app.js"> 引入后，其中的全局函数和 AppState 对象
+         在当前页面中均可直接使用。
+         下面的内联 <script> 是结算页的专属逻辑，依赖 app.js 中的函数。
+         ============================================= -->
     <script src="js/app.js"></script>
     <script>
         // =============================================
-        // 结算页专属脚本
-        // 函数: renderCheckout()、updateSummary()、placeOrder()
-        // 实现方式：Array.filter() 获取选中商品 + Array.map().join('') 渲染商品列表
-        //           + createOrder() 创建订单 + setTimeout() 延迟跳转
-        // 实现原理：结算页是下单流程的终点，数据流为：
-        //           AppState.cart（选中商品） → renderCheckout（展示） → placeOrder（提交）
-        //           → createOrder（创建订单+清空购物车） → profile.html（查看订单）。
-        //           地址预填：优先从 LocalStorage 的 shop_addr_{用户ID} 读取保存的地址，
-        //           其次使用当前登录用户信息（姓名+手机号）作为默认值。
-        //           支付方式切换通过事件委托实现：在 document 上监听 change 事件，
-        //           判断 e.target.name === 'payment' 后动态切换样式。
+        // 结算页专属脚本（checkout.html）
+        //
+        // 【答辩要点】本脚本包含结算页的完整交互逻辑。
+        // 为什么把脚本写在页面内而不是 js/app.js 中？
+        //   每个页面的逻辑不同，如果全部放在 app.js 中会导致文件过大。
+        //   采用"公共逻辑抽离 + 页面逻辑内联"的方式：
+        //     app.js：所有页面共用的函数（状态管理、购物车、订单等）
+        //     各页面 <script>：页面特有的渲染和交互逻辑
+        //
+        // 数据流向：
+        //   AppState.cart（全局状态）
+        //     → filter(i => i.checked) 筛选选中商品
+        //     → renderCheckout() 渲染结算页面
+        //     → placeOrder() 提交订单
+        //     → createOrder() 创建订单 + 清空购物车
+        //     → window.location.href 跳转到订单列表
+        //
+        // 关键 JavaScript 知识点：
+        //   Array.filter()  - 筛选数组元素
+        //   Array.map()     - 遍历数组生成新数组
+        //   Array.join('')  - 数组拼接为字符串
+        //   element.innerHTML - 动态渲染 HTML
+        //   RegExp.test()   - 正则表达式验证
+        //   setTimeout()    - 延迟执行（跳转前给用户看 Toast）
+        //   事件委托        - 在 document 上监听 change 事件
+        //   DOMContentLoaded - 页面 DOM 加载完成后执行
+        //   URL 参数传递    - profile.html?tab=orders 指定跳转后显示的标签页
         // =============================================
 
         /**
          * 渲染结算页面
-         * 根据登录状态和购物车选中商品显示不同内容
-         * 实现方式：style.display 控制三种状态切换 + value 赋值预填用户信息
-         * 实现原理：filter(i => i.checked) 获取购物车中所有选中商品。
-         *           收货人姓名和手机号从 AppState.currentUser 预填（减少用户输入）。
-         *           商品列表用 map() 遍历选中商品，每项显示缩略图+名称+单价×数量+小计。
-         *           汇总信息通过 getCartTotal() 计算总金额并显示。
+         * 
+         * 【答辩要点】这是结算页的核心函数，实现了"条件渲染"模式。
+         * 通过判断不同的条件（登录状态、购物车状态），展示不同的 UI。
+         * 
+         * 条件渲染的三种方式：
+         *   1. if/else + style.display（本项目使用的方式，最简单直接）
+         *   2. 三元表达式（适合简单场景）
+         *   3. 框架中的条件渲染（如 Vue 的 v-if、React 的 && 短路）
+         * 
+         * 执行流程：
+         *   第1步：检查 AppState.currentUser 是否为 null
+         *          → 是：显示"未登录"提示，隐藏结算表单，return 退出
+         *   第2步：从 AppState.cart 中用 filter() 筛选 checked=true 的商品
+         *          → 数量为 0：显示"无商品"提示，隐藏结算表单，return 退出
+         *   第3步：显示结算表单，预填用户信息，渲染商品列表
+         * 
+         * 预填用户信息的原理：
+         *   AppState.currentUser 在登录成功后由 login() 函数设置，
+         *   包含用户的 name 和 phone 字段。
+         *   直接读取这些值赋给 input.value，减少用户手动输入。
+         *   用户仍可以修改（不是 readonly），因为收货地址可能不同于注册信息。
+         * 
+         * 为什么 || '' 是必要的？
+         *   AppState.currentUser.name 可能为 undefined（用户注册时未填写姓名），
+         *   undefined 赋值给 input.value 会显示 "undefined" 字符串，体验很差。
+         *   用 || '' 确保至少是空字符串，input 显示空白而不是 "undefined"。
+         * 
+         * @returns {void} 无返回值，直接操作 DOM
          */
         function renderCheckout() {
-            // 检查登录状态
+            // ★ 第1步：检查登录状态
+            // AppState.currentUser 在 app.js 的 login() 函数中设置
+            // null 表示未登录 → 显示登录提示
             if (!AppState.currentUser) {
+                // display:'' 恢复为默认显示（之前设置了 display:none）
                 document.getElementById('checkout-not-login').style.display = '';
                 document.getElementById('checkout-content').style.display = 'none';
-                return;
+                return;  // 提前返回，不执行后续代码
             }
             
-            // 检查是否有选中的商品
+            // ★ 第2步：检查是否有选中商品
+            // filter(i => i.checked) 是 ES6 箭头函数写法
+            // 等价于 filter(function(i) { return i.checked; })
+            // 返回一个新数组，包含所有 checked === true 的商品
             const checkedItems = AppState.cart.filter(i => i.checked);
             if (checkedItems.length === 0) {
                 document.getElementById('checkout-empty').style.display = '';
                 document.getElementById('checkout-content').style.display = 'none';
-                return;
+                return;  // 提前返回
             }
             
-            // 显示结算表单
+            // ★ 第3步：正常显示结算表单
+            // 注意：需要隐藏两个空状态 div，显示结算内容
             document.getElementById('checkout-content').style.display = '';
             
-            // 预填用户信息（从登录信息自动填充收货人）
+            // ★ 第4步：预填收货人信息
+            // 从当前登录用户信息中自动填充，减少用户输入
+            // || '' 的作用：防止 undefined 被转为字符串 "undefined"
             document.getElementById('receiver-name').value = AppState.currentUser.name || '';
             document.getElementById('receiver-phone').value = AppState.currentUser.phone || '';
             
-            // 渲染选中商品的列表
+            // ★ 第5步：渲染选中商品列表
+            // map() + join('') 是前端动态渲染的经典模式：
+            //   1. map() 遍历数组，将每个商品对象转为 HTML 字符串
+            //   2. join('') 将数组拼接成一个字符串（不加分隔符）
+            //   3. innerHTML 将字符串插入 DOM
+            // 这种方式的优点：代码简洁、性能好（一次性渲染，不是逐条插入）
+            // 注意：这种方式会替换容器内所有内容，不能保留之前的事件绑定
             const itemsEl = document.getElementById('checkout-items');
             itemsEl.innerHTML = checkedItems.map(item => `
                 <div class="checkout-item">
                     <!-- 商品缩略图 -->
                     <div class="co-image">
+                        <!-- 
+                          onerror 属性：图片加载失败时的降级处理（fallback）
+                          如果图片路径不存在或网络错误，显示 📦 占位图标
+                          这是"渐进增强"策略：正常情况下显示图片，异常情况下有降级方案
+                        -->
                         <img src="${item.image}" alt="${item.name}" onerror="this.parentElement.innerHTML='<div style=display:flex;align-items:center;justify-content:center;color:#999;font-size:24px;>📦</div>'">
                     </div>
-                    <!-- 商品信息 -->
+                    <!-- 商品信息：名称 + 单价 × 数量 -->
                     <div class="co-info">
                         <div class="co-name">${item.name}</div>
+                        <!-- toFixed(2)：保留两位小数，确保价格显示格式统一 -->
                         <div class="co-price">¥${item.price.toFixed(2)} × ${item.quantity}</div>
                     </div>
-                    <!-- 小计金额 -->
+                    <!-- 小计金额 = 单价 × 数量 -->
                     <div class="co-total">¥${(item.price * item.quantity).toFixed(2)}</div>
                 </div>
-            `).join('');
+            `).join('');  // join('') 将数组元素拼接，不加任何分隔符
             
-            // 更新汇总信息
+            // ★ 第6步：更新右侧金额汇总
             updateSummary();
         }
         
         /**
-         * 更新订单汇总（总价等）
-         * 实现方式：getCartTotal() 计算选中商品总金额 + textContent 更新显示
+         * 更新订单汇总金额
+         * 
+         * 【答辩要点】该函数从全局购物车数据中计算金额并更新 DOM。
+         * 
+         * getCartTotal() 定义在 app.js 中，功能是：
+         *   遍历购物车中 checked === true 的商品，
+         *   对每个商品计算 price × quantity，用 reduce() 累加求和。
+         * 
+         * 为什么用 textContent 而不是 innerHTML？
+         *   textContent 只设置纯文本，不会解析 HTML 标签。
+         *   金额是纯数字，不需要 HTML 解析，用 textContent 更安全（防止 XSS）。
+         *   innerHTML 会解析 HTML，如果数据中包含恶意脚本会有安全风险。
+         * 
+         * toFixed(2) 的作用：
+         *   将数字转为保留两位小数的字符串。
+         *   例如：99.9 → "99.90"，确保金额显示格式统一。
+         *   注意：toFixed() 返回的是字符串，不是数字。
+         * 
+         * @returns {void} 无返回值，直接更新 DOM 元素的文本内容
          */
         function updateSummary() {
-            const total = getCartTotal();
+            const total = getCartTotal();  // 调用 app.js 中的全局函数
+            // 更新商品总价显示
             document.getElementById('summary-subtotal').textContent = '¥' + total.toFixed(2);
+            // 更新应付总额显示（本项目运费为 0，所以等于商品总价）
             document.getElementById('summary-total').textContent = '¥' + total.toFixed(2);
         }
 
-        // 支付方式切换时改变边框高亮样式
+        /**
+         * ★ 支付方式切换的事件委托
+         * 
+         * 【答辩要点】这是事件委托（Event Delegation）的典型应用。
+         * 
+         * 什么是事件委托？
+         *   不在每个子元素上绑定事件，而是在父元素上绑定一个事件，
+         *   利用事件冒泡机制，当子元素触发事件时，事件会向上冒泡到父元素，
+         *   在父元素中通过 e.target 判断实际触发事件的元素。
+         * 
+         * 事件委托的优点：
+         *   1. 减少事件绑定数量：3 个 radio 只需要 1 个监听器
+         *   2. 动态元素也有效：后续添加的 radio 也能响应（虽然这里不需要）
+         *   3. 内存占用更少：更少的监听器 = 更少的内存
+         * 
+         * 为什么不直接在 radio 上绑定 onclick？
+         *   如果直接绑定：每个 radio 都需要 onclick="xxx"，
+         *   代码重复，维护成本高。
+         *   事件委托只需要一个监听器，代码集中管理。
+         * 
+         * 工作流程：
+         *   1. 用户在任意 radio 上点击 → 触发 change 事件
+         *   2. 事件冒泡到 document → 触发此监听器
+         *   3. 检查 e.target.name === 'payment'（只处理支付方式的 radio）
+         *   4. 遍历所有 payment radio，根据 checked 状态切换 label 样式
+         * 
+         * 为什么用 'change' 事件而不是 'click'？
+         *   change 在值真正改变时才触发，更语义化。
+         *   如果用 click，点击已选中的 radio 也会触发，造成不必要的样式切换。
+         * 
+         * closest('label') 的作用：
+         *   从当前元素向上查找最近的 label 祖先元素。
+         *   这里 radio 被 label 包裹，所以 closest('label') 返回包裹它的 label。
+         */
         document.addEventListener('change', function(e) {
+            // 只处理支付方式 radio 的变化
             if (e.target.name === 'payment') {
+                // 遍历所有 payment radio 按钮
                 document.querySelectorAll('input[name="payment"]').forEach(radio => {
+                    // closest('label')：向上查找最近的 label 父元素
                     const label = radio.closest('label');
                     if (radio.checked) {
-                        // 选中状态：红色边框 + 红色背景
+                        // ★ 选中状态：红色主题边框 + 浅红背景
+                        // var(--primary) 是 CSS 自定义属性，值为红色 #e74c3c
                         label.style.borderColor = 'var(--primary)';
                         label.style.background = 'var(--primary-light)';
                     } else {
-                        // 未选中状态：默认边框
+                        // ★ 未选中状态：恢复默认灰色边框
+                        // var(--border) 是 CSS 自定义属性，值为灰色
                         label.style.borderColor = 'var(--border)';
-                        label.style.background = '';
+                        label.style.background = '';  // 恢复为 CSS 中定义的默认背景
                     }
                 });
             }
@@ -287,41 +562,109 @@
         
         /**
          * 提交订单
-         * 验证表单 → 创建订单 → 跳转订单列表
-         * 实现方式：正则 test() 验证手机号 + createOrder() 全局函数创建订单 + setTimeout() 跳转
-         * 实现原理：先验证三个必填字段（收货人、手机号、地址），手机号用正则 /^1[3-9]\d{9}$/ 校验。
-         *           验证通过后构建 addressInfo 对象，调用 createOrder() 全局函数。
-         *           createOrder() 内部：生成订单号、深拷贝商品列表、计算总金额、
-         *           保存订单到 LocalStorage、清除购物车已购商品。
-         *           成功后 Toast 提示，1.5 秒后跳转到 profile.html?tab=orders 查看订单列表。
-         *           失败时 Toast 提示错误（通常因为购物车为空或未登录）。
+         * 
+         * 【答辩要点】这是整个购物流程的终点函数，完成从"浏览"到"下单"的最后一步。
+         * 
+         * 执行流程（5步）：
+         *   第1步：获取表单数据（trim() 去除首尾空格）
+         *   第2步：表单验证（三个必填字段 + 手机号格式校验）
+         *   第3步：构建收货地址对象
+         *   第4步：调用 createOrder() 创建订单
+         *   第5步：根据结果 Toast 提示 + 延迟跳转
+         * 
+         * 手机号正则 /^1[3-9]\d{9}$/ 详解：
+         *   ^         - 字符串开始
+         *   1         - 第一位必须是 1（中国大陆手机号以 1 开头）
+         *   [3-9]     - 第二位是 3-9（运营商号段）
+         *   \d{9}     - 后面 9 位数字
+         *   $         - 字符串结束
+         *   总共 11 位数字，覆盖了中国大陆所有手机号段。
+         * 
+         * 为什么用 setTimeout 延迟 1500ms 跳转？
+         *   用户体验：让用户看到"订单提交成功"的 Toast 提示后再跳转。
+         *   如果立即跳转，Toast 刚显示就被新页面覆盖，用户看不到提示。
+         *   1500ms 是一个合适的延迟：足够阅读提示，又不会让用户等太久。
+         * 
+         * 跳转目标 profile.html?tab=orders 的含义：
+         *   profile.html 是个人中心页面。
+         *   ?tab=orders 是 URL 查询参数（Query String）。
+         *   profile.html 中的 JS 会读取这个参数，自动切换到"我的订单"标签页。
+         *   这样用户提交订单后直接看到订单列表，体验流畅。
+         * 
+         * createOrder() 的返回值：
+         *   成功：返回创建的订单对象 { id, items, total, address, ... }
+         *   失败：返回 null（购物车为空或未登录）
+         *   用 if (order) 判断，null 是 falsy 值。
+         * 
+         * @returns {void} 无返回值，通过 Toast 提示结果并跳转页面
          */
         function placeOrder() {
+            // ★ 第1步：获取表单数据
+            // trim() 去除首尾空格，防止用户输入纯空格通过验证
             const name = document.getElementById('receiver-name').value.trim();
             const phone = document.getElementById('receiver-phone').value.trim();
             const address = document.getElementById('receiver-address').value.trim();
             
-            // 表单验证
-            if (!name) { showToast('请输入收货人姓名', 'error'); return; }
-            if (!phone || !/^1[3-9]\d{9}$/.test(phone)) { showToast('请输入正确的手机号', 'error'); return; }
-            if (!address) { showToast('请输入收货地址', 'error'); return; }
+            // ★ 第2步：表单验证（短路求值，逐条检查）
+            // 验证收货人姓名：不能为空
+            if (!name) { 
+                showToast('请输入收货人姓名', 'error');  // 'error' 参数指定红色错误样式
+                return;  // 提前返回，不继续执行
+            }
+            // 验证手机号：不能为空 + 必须匹配正则格式
+            // /^1[3-9]\d{9}$/ 是正则表达式字面量，test() 方法返回 boolean
+            if (!phone || !/^1[3-9]\d{9}$/.test(phone)) { 
+                showToast('请输入正确的手机号', 'error'); 
+                return; 
+            }
+            // 验证地址：不能为空
+            if (!address) { 
+                showToast('请输入收货地址', 'error'); 
+                return; 
+            }
             
-            // 创建订单
+            // ★ 第3步：构建收货地址对象
+            // ES6 属性简写：{ name, phone, address } 等价于 { name: name, phone: phone, address: address }
             const addressInfo = { name, phone, address };
+            
+            // ★ 第4步：调用 createOrder() 创建订单
+            // createOrder() 定义在 app.js 中，是全局函数
+            // 内部逻辑：生成订单号 → 深拷贝商品 → 保存到 LocalStorage → 清除已购商品
             const order = createOrder(addressInfo);
             
+            // ★ 第5步：处理结果
             if (order) {
+                // 成功：显示绿色成功提示
                 showToast('订单提交成功！', 'success');
-                // 1.5秒后跳转到个人中心订单列表
+                // 延迟 1.5 秒后跳转到个人中心的订单列表
+                // setTimeout 的第一个参数是回调函数，第二个是延迟毫秒数
                 setTimeout(() => {
+                    // window.location.href 修改当前页面的 URL，触发页面跳转
                     window.location.href = 'profile.html?tab=orders';
-                }, 1500);
+                }, 1500);  // 1500 毫秒 = 1.5 秒
             } else {
+                // 失败：显示红色错误提示
+                // 失败原因通常：购物车为空、未登录等（在 createOrder 内部已判断）
                 showToast('订单提交失败，请重试', 'error');
             }
         }
         
-        // 页面加载完成后渲染
+        /**
+         * ★ 页面初始化入口
+         * 
+         * 【答辩要点】DOMContentLoaded 事件在 HTML 文档完全加载和解析完成后触发，
+         * 此时 DOM 树已构建完毕，可以安全地操作 DOM 元素。
+         * 
+         * DOMContentLoaded vs window.onload：
+         *   DOMContentLoaded：DOM 解析完成即触发（不需要等图片、CSS 等资源加载）
+         *   window.onload：所有资源（图片、CSS、JS）都加载完成后才触发
+         *   这里用 DOMContentLoaded 更合适：只需要 DOM 就绪，不需要等图片。
+         * 
+         * addEventListener vs onload 属性：
+         *   addEventListener 可以绑定多个监听器，不会互相覆盖。
+         *   onload 属性只能赋值一个函数，后面的会覆盖前面的。
+         *   推荐使用 addEventListener。
+         */
         document.addEventListener('DOMContentLoaded', renderCheckout);
     </script>
 </body>

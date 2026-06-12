@@ -2,212 +2,231 @@
    全局样式表 - 24215220120_陈学羽_大作业
    网上商城 - 综合页面设计
    
-   文件结构：
-   一、  CSS 变量与基础重置
-   二、  顶部导航栏
-   三、  主头部（Logo + 搜索框 + 操作区）
-   四、  分类导航
-   五、  轮播图
-   六、  主内容区域（快捷入口 + 商品网格 + 页脚）
-   七、  登录/注册页面
-   八、  商品详情页
-   九、  购物车页面
-   十、  结算/订单页面
-   十一、个人中心页面
-   十二、Toast 提示 + Modal 弹窗
-   十三、新功能样式（收藏/搜索历史/回到顶部/排序）
-   十四、响应式布局
+   【答辩要点】本文件定义了整个项目的视觉样式。
+   采用现代 CSS 技术：
+   - CSS 变量（Custom Properties）统一管理主题色
+   - Flexbox + Grid 实现响应式布局
+   - position: sticky 实现粘性定位
+   - transition/animation 实现过渡动画
+   - @media 查询实现响应式适配
+   - @keyframes 定义关键帧动画
+   
+   文件结构（14个模块）：
+   一、  CSS 变量与基础重置    二、  顶部导航栏
+   三、  主头部区域            四、  分类导航栏
+   五、  轮播图                六、  主内容区域
+   七、  登录/注册页面         八、  商品详情页
+   九、  购物车页面            十、  结算/订单页面
+   十一、个人中心页面          十二、Toast 提示 + Modal 弹窗
+   十三、新功能样式            十四、响应式布局
    ============================================ */
 
 /* =====================================================
    一、CSS 变量定义
-   使用 CSS 自定义属性统一管理颜色、间距、阴影等
-   方便全局修改和维护
-   实现原理：CSS 变量（自定义属性）定义在 :root 伪类上，作用域为整个文档。
-           使用 var(--变量名) 引用，浏览器在渲染时将变量替换为实际值。
-           变量支持继承和级联，修改 :root 中的值即可全局生效。
-           相比硬编码颜色值，变量提供了单一修改点的设计模式，
-           类似编程中的"常量定义"，便于主题切换和维护。
+   【答辩要点】CSS 变量（也叫自定义属性）是 CSS3 的重要特性。
+   定义在 :root 伪类上表示全局变量，整个文档都可以使用。
+   使用方式：var(--变量名)
+   优势：
+   1. 统一管理颜色/间距/阴影等设计参数
+   2. 修改一处即可全局生效，方便主题切换
+   3. 支持默认值：var(--变量名, 默认值)
+   4. 可以在 JavaScript 中动态修改（setProperty）
+   本项目的变量命名采用 BEM 风格：--用途-变体
    ===================================================== */
 :root {
-    --primary: #e4393c;
-    --primary-hover: #c1272d;
-    --primary-light: #ffe8e8;
-    --secondary: #ff6b35;
-    --dark: #1a1a2e;
-    --text: #333333;
-    --text-light: #666666;
-    --text-muted: #999999;
-    --bg: #f5f5f5;
-    --white: #ffffff;
-    --border: #e8e8e8;
-    --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    --shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.15);
-    --radius: 8px;
-    --radius-sm: 4px;
-    --transition: all 0.3s ease;
-    --header-height: 72px;
-    --success: #52c41a;
-    --warning: #faad14;
-    --info: #1890ff;
+    /* 主色调：红色系（电商常用色，刺激购买欲） */
+    --primary: #e4393c;          /* 主题红色 */
+    --primary-hover: #c1272d;    /* 悬停时深红色 */
+    --primary-light: #ffe8e8;    /* 浅红色背景 */
+    
+    /* 辅助色 */
+    --secondary: #ff6b35;        /* 橙色（用于渐变搭配） */
+    --dark: #1a1a2e;             /* 深色（页眉页脚背景） */
+    
+    /* 文字颜色 */
+    --text: #333333;             /* 主要文字 */
+    --text-light: #666666;       /* 次要文字 */
+    --text-muted: #999999;       /* 辅助/禁用文字 */
+    
+    /* 背景与边框 */
+    --bg: #f5f5f5;              /* 页面背景色 */
+    --white: #ffffff;           /* 白色 */
+    --border: #e8e8e8;          /* 边框颜色 */
+    
+    /* 阴影：通过多层 rgba 实现不同深度的阴影效果 */
+    --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);       /* 卡片阴影 */
+    --shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.15); /* 悬停阴影（更深） */
+    
+    /* 圆角 */
+    --radius: 8px;              /* 大圆角（卡片） */
+    --radius-sm: 4px;           /* 小圆角（按钮/输入框） */
+    
+    /* 过渡动画 */
+    --transition: all 0.3s ease; /* 统一过渡效果：0.3秒缓动 */
+    
+    /* 布局 */
+    --header-height: 72px;      /* 头部高度（用于 sticky 计算） */
+    
+    /* 功能色 */
+    --success: #52c41a;         /* 成功-绿色 */
+    --warning: #faad14;         /* 警告-黄色 */
+    --info: #1890ff;            /* 信息-蓝色 */
 }
 
 /* =====================================================
-   一-续、基础样式重置
-   清除浏览器默认样式，建立统一基准
-   实现原理：* 通配符选择器匹配所有元素，统一清除默认 margin/padding。
-           box-sizing: border-box 改变盒模型计算方式，
-           使元素的 width/height 包含 border 和 padding，
-           避免传统 content-box 模型下尺寸计算复杂的问题。
-           这是现代 CSS Reset 的核心三行代码。
+   一-续、基础样式重置（CSS Reset）
+   【答辩要点】浏览器的默认样式在不同浏览器中不一致。
+   CSS Reset 的目的是清除这些默认样式，建立统一的基准。
+   核心三行：
+   1. margin: 0; padding: 0; → 清除内外边距
+   2. box-sizing: border-box; → 改变盒模型，width 包含 border+padding
    ===================================================== */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+    margin: 0;          /* 清除所有元素的外边距 */
+    padding: 0;         /* 清除所有元素的内边距 */
+    box-sizing: border-box;  /* 盒模型：width = content + padding + border */
 }
 
 html {
-    scroll-behavior: smooth;
+    scroll-behavior: smooth;  /* 页面内锚点跳转时平滑滚动 */
 }
 
 body {
     font-family: 'Microsoft YaHei', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
-    color: var(--text);
-    background-color: var(--bg);
-    line-height: 1.6;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    /* 字体栈：优先使用系统字体，fallback 到通用字体 */
+    color: var(--text);            /* 使用 CSS 变量设置文字颜色 */
+    background-color: var(--bg);   /* 页面背景色 */
+    line-height: 1.6;             /* 行高 1.6 倍（提升可读性） */
+    min-height: 100vh;            /* 最小高度为视口高度（保证页脚在底部） */
+    display: flex;                /* Flexbox 布局 */
+    flex-direction: column;       /* 垂直方向排列（header → main → footer） */
 }
 
 a {
-    text-decoration: none;
-    color: inherit;
+    text-decoration: none;  /* 去掉链接默认下划线 */
+    color: inherit;         /* 继承父元素颜色（不显示默认蓝色） */
 }
 
 ul, ol {
-    list-style: none;
+    list-style: none;  /* 去掉列表默认的项目符号 */
 }
 
 img {
-    max-width: 100%;
-    height: auto;
-    display: block;
+    max-width: 100%;   /* 图片不超过容器宽度（响应式） */
+    height: auto;      /* 高度自适应（保持比例） */
+    display: block;    /* 块级元素（消除图片下方的空白间隙） */
 }
 
 input, button, select, textarea {
-    font-family: inherit;
-    font-size: inherit;
-    outline: none;
-    border: none;
+    font-family: inherit;  /* 继承 body 的字体（覆盖浏览器默认字体） */
+    font-size: inherit;    /* 继承字体大小 */
+    outline: none;         /* 去掉默认的聚焦轮廓线 */
+    border: none;          /* 去掉默认边框 */
 }
 
 button {
-    cursor: pointer;
+    cursor: pointer;  /* 鼠标悬停时显示手型（提升交互体验） */
 }
 
+/* 通用容器：限制内容最大宽度 + 水平居中 */
 .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
+    max-width: 1200px;     /* 最大宽度 1200px（适配主流屏幕） */
+    margin: 0 auto;        /* 上下 0，左右 auto（水平居中） */
+    padding: 0 20px;       /* 左右 20px 内边距（小屏幕不贴边） */
 }
 
 /* =====================================================
    二、顶部信息栏
-   深色背景，显示欢迎语、登录状态、购物车入口
-   实现原理：使用 Flexbox 布局，justify-content: space-between 将左右两组链接
-           分别推向两端。所有链接设置 transition 实现悬停颜色过渡动画。
-           CSS 过渡通过 transition 属性指定过渡属性和时长，
-           浏览器在属性值变化时自动计算中间帧，实现平滑动画效果。
+   【答辩要点】深色背景的导航条，提供登录状态、购物车入口。
+   使用 Flexbox 的 justify-content: space-between 实现两端对齐。
+   transition 属性实现颜色过渡动画（0.3秒缓动）。
    ===================================================== */
 .top-bar {
-    background-color: var(--dark);
-    color: #ccc;
-    font-size: 13px;
-    padding: 6px 0;
+    background-color: var(--dark);  /* 深色背景（#1a1a2e） */
+    color: #ccc;                    /* 浅灰色文字 */
+    font-size: 13px;                /* 小号字体 */
+    padding: 6px 0;                 /* 上下 6px 内边距 */
 }
 
 .top-bar .container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    display: flex;                  /* Flexbox 布局 */
+    justify-content: space-between; /* 两端对齐：左侧链接 ← → 右侧链接 */
+    align-items: center;            /* 垂直居中 */
 }
 
 .top-bar a {
-    color: #ccc;
-    transition: var(--transition);
+    color: #ccc;                    /* 链接颜色 */
+    transition: var(--transition);  /* 过渡动画：0.3秒缓动 */
 }
 
 .top-bar a:hover {
-    color: var(--white);
+    color: var(--white);            /* 悬停变白 */
 }
 
 .top-bar .left-links a {
-    margin-right: 20px;
+    margin-right: 20px;             /* 左侧链接间距 */
 }
 
 .top-bar .right-links {
-    display: flex;
-    align-items: center;
-    gap: 15px;
+    display: flex;                  /* Flex 布局 */
+    align-items: center;            /* 垂直居中 */
+    gap: 15px;                      /* gap 属性设置子元素间距（现代 CSS） */
 }
 
 .top-bar .right-links .user-info {
-    color: var(--white);
-    font-weight: 500;
+    color: var(--white);            /* 用户名用白色突出显示 */
+    font-weight: 500;               /* 中等字重 */
 }
 
 .top-bar .right-links .btn-logout {
-    background: transparent;
+    background: transparent;        /* 透明背景 */
     color: #ccc;
     padding: 2px 8px;
-    border: 1px solid #555;
-    border-radius: var(--radius-sm);
+    border: 1px solid #555;         /* 灰色边框 */
+    border-radius: var(--radius-sm);/* 小圆角 */
     font-size: 12px;
     transition: var(--transition);
 }
 
 .top-bar .right-links .btn-logout:hover {
-    color: var(--primary);
-    border-color: var(--primary);
+    color: var(--primary);          /* 悬停变红色 */
+    border-color: var(--primary);   /* 边框也变红 */
 }
 
 /* =====================================================
    三、主头部区域
-   包含 Logo、搜索框、个人中心/购物车入口
-   使用 sticky 定位，滚动时始终固定在顶部
-   实现原理：position: sticky 是 CSS 的粘性定位，元素在滚动到指定位置前
-           表现为 relative（正常文档流），滚动超过 top:0 后变为 fixed（固定在视口顶部）。
-           z-index: 1000 确保头部始终在其他内容之上，不被后续内容遮挡。
-           Flexbox 布局使 Logo、搜索框、操作区三部分水平排列。
+   【答辩要点】包含 Logo、搜索框、操作区。
+   position: sticky 是 CSS3 的重要特性：滚动到顶部后固定在视口。
+   z-index: 1000 确保头部始终在最上层，不被其他元素遮挡。
    ===================================================== */
 .main-header {
     background-color: var(--white);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    position: sticky;
-    top: 0;
-    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);  /* 底部阴影（轻微立体感） */
+    position: sticky;       /* 粘性定位：滚动时固定在顶部 */
+    top: 0;                 /* 距离视口顶部 0px */
+    z-index: 1000;          /* 层级：确保在其他内容之上 */
 }
 
 .main-header .container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: var(--header-height);
+    display: flex;                  /* Flex 布局 */
+    align-items: center;            /* 垂直居中 */
+    justify-content: space-between; /* 两端对齐：Logo ← → 搜索框 ← → 操作区 */
+    height: var(--header-height);   /* 72px 高度 */
 }
 
+/* Logo 区域 */
 .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    display: flex;          /* 图标 + 文字水平排列 */
+    align-items: center;    /* 垂直居中 */
+    gap: 10px;              /* 图标和文字间距 */
 }
 
 .logo-icon {
     width: 42px;
     height: 42px;
     background: linear-gradient(135deg, var(--primary), var(--secondary));
-    border-radius: 10px;
+    /* 渐变背景：从红色到橙色（135度方向） */
+    border-radius: 10px;    /* 圆角方块 */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -218,73 +237,73 @@ button {
 
 .logo-text {
     font-size: 24px;
-    font-weight: 700;
+    font-weight: 700;       /* 粗体 */
     color: var(--dark);
 }
 
 .logo-text span {
-    color: var(--primary);
+    color: var(--primary);  /* "商城"二字用红色突出 */
 }
 
-/* 搜索框样式 - 红色边框，带搜索按钮 */
+/* 搜索框：input + button 组合 */
 .search-box {
     display: flex;
     align-items: center;
-    flex: 0 1 500px;
-    margin: 0 40px;
+    flex: 0 1 500px;        /* flex-grow:0, flex-shrink:1, flex-basis:500px */
+    margin: 0 40px;         /* 左右留白 */
 }
 
 .search-box input {
-    flex: 1;
+    flex: 1;                /* 输入框占据剩余空间 */
     height: 40px;
-    border: 2px solid var(--primary);
-    border-right: none;
-    border-radius: var(--radius) 0 0 var(--radius);
+    border: 2px solid var(--primary);     /* 红色边框（突出搜索框） */
+    border-right: none;                   /* 右边框去掉（与按钮无缝连接） */
+    border-radius: var(--radius) 0 0 var(--radius);  /* 左侧圆角 */
     padding: 0 16px;
     font-size: 14px;
     transition: var(--transition);
 }
 
 .search-box input:focus {
-    border-color: var(--primary-hover);
+    border-color: var(--primary-hover);   /* 聚焦时边框变深 */
 }
 
 .search-box button {
     height: 40px;
     padding: 0 24px;
-    background-color: var(--primary);
+    background-color: var(--primary);     /* 红色背景 */
     color: var(--white);
-    border-radius: 0 var(--radius) var(--radius) 0;
+    border-radius: 0 var(--radius) var(--radius) 0;  /* 右侧圆角 */
     font-size: 16px;
     font-weight: 500;
     transition: var(--transition);
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 6px;               /* 图标和文字间距 */
 }
 
 .search-box button:hover {
-    background-color: var(--primary-hover);
+    background-color: var(--primary-hover);  /* 悬停变深红 */
 }
 
-/* 头部右侧操作区 - 个人中心、购物车图标 */
+/* 头部右侧操作区：个人中心 + 购物车 */
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 24px;              /* 操作项间距 */
 }
 
 .header-action-item {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* 图标在上，文字在下 */
     align-items: center;
     cursor: pointer;
     transition: var(--transition);
-    position: relative;
+    position: relative;     /* 为角标（badge）提供定位参考 */
 }
 
 .header-action-item:hover {
-    color: var(--primary);
+    color: var(--primary);  /* 悬停变红 */
 }
 
 .header-action-item .icon {
@@ -297,29 +316,31 @@ button {
     color: var(--text-light);
 }
 
+/* 购物车角标：红色小圆点 */
 .header-action-item .badge {
-    position: absolute;
-    top: -6px;
-    right: -10px;
+    position: absolute;     /* 绝对定位（相对于 .header-action-item） */
+    top: -6px;              /* 向上偏移 */
+    right: -10px;           /* 向右偏移 */
     background-color: var(--primary);
     color: var(--white);
     font-size: 11px;
-    min-width: 18px;
+    min-width: 18px;        /* 最小宽度（保证至少是圆形） */
     height: 18px;
-    border-radius: 9px;
+    border-radius: 9px;     /* 高度的一半 = 胶囊形 */
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 4px;
+    padding: 0 4px;         /* 数字两侧留白 */
 }
 
 /* =====================================================
    四、分类导航栏
-   红色"全部商品分类"按钮 + 横向滚动的分类链接
-   底部红色边框作为视觉强调
+   【答辩要点】红色"全部商品分类"按钮 + 可横向滚动的分类链接。
+   底部红色边框作为选中状态的视觉指示。
+   使用 overflow-x: auto 实现横向滚动（移动端友好）。
    ===================================================== */
 .category-nav {
-    display: none;
+    display: none;  /* 默认隐藏（本项目使用快捷入口替代） */
 }
 
 .category-nav .container {
@@ -329,7 +350,7 @@ button {
 }
 
 .category-nav .all-categories {
-    background-color: var(--primary);
+    background-color: var(--primary);  /* 红色背景（突出"全部分类"） */
     color: var(--white);
     padding: 0 20px;
     height: 42px;
@@ -339,7 +360,7 @@ button {
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    white-space: nowrap;
+    white-space: nowrap;    /* 文字不换行 */
     margin-right: 10px;
 }
 
@@ -347,18 +368,19 @@ button {
     display: flex;
     align-items: center;
     gap: 6px;
-    overflow-x: auto;
-    flex: 1;
+    overflow-x: auto;       /* 超出时横向滚动 */
+    flex: 1;                /* 占据剩余空间 */
 }
 
 .category-nav .nav-links a {
     padding: 8px 16px;
     font-size: 14px;
-    white-space: nowrap;
+    white-space: nowrap;    /* 不换行 */
     border-radius: var(--radius-sm);
     transition: var(--transition);
 }
 
+/* 悬停和选中状态：红色文字 + 浅红背景 */
 .category-nav .nav-links a:hover,
 .category-nav .nav-links a.active {
     color: var(--primary);
@@ -367,41 +389,38 @@ button {
 }
 
 /* =====================================================
-   五、轮播图（已隐藏，代码保留以备后续启用）
-   使用 absolute 定位实现淡入淡出切换
-   实现原理：所有 .banner-slide 使用 position: absolute 叠加在同一位置，
-           默认 opacity: 0 隐藏，.active 类的 opacity: 1 显示。
-           CSS transition: opacity 0.6s ease 实现淡入淡出动画。
-           指示器圆点 .dot.active 时宽度从 10px 变为 28px（胶囊效果），
-           通过 transition 实现平滑过渡。左右箭头用 transform: translateY(-50%) 垂直居中。
+   五、轮播图（已隐藏）
+   【答辩要点】使用 position: absolute 将多张图堆叠在同一位置。
+   通过 opacity 控制显示（0=隐藏, 1=显示），transition 实现淡入淡出。
+   这是一种纯 CSS 的轮播图切换方案。
    ===================================================== */
 .banner-section {
-    display: none;
+    display: none;  /* 默认隐藏 */
 }
 
 .banner-container {
-    position: relative;
+    position: relative;     /* 为子元素的 absolute 定位提供参考 */
     border-radius: 0;
-    overflow: hidden;
+    overflow: hidden;       /* 隐藏溢出内容 */
     height: 180px;
     box-shadow: none;
 }
 
 .banner-slide {
-    position: absolute;
+    position: absolute;     /* 绝对定位：所有 slide 堆叠在一起 */
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    opacity: 0;
-    transition: opacity 0.6s ease;
+    opacity: 0;             /* 默认透明（隐藏） */
+    transition: opacity 0.6s ease;  /* 透明度过渡动画 */
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .banner-slide.active {
-    opacity: 1;
+    opacity: 1;             /* 激活的 slide 不透明（显示） */
 }
 
 .banner-slide .banner-bg {
@@ -410,16 +429,16 @@ button {
     left: 0;
     width: 100%;
     height: 100%;
-    background-size: cover;
-    background-position: center;
+    background-size: cover;       /* 背景图覆盖整个区域 */
+    background-position: center;  /* 背景图居中 */
 }
 
 .banner-slide .banner-content {
     position: relative;
-    z-index: 1;
+    z-index: 1;                   /* 确保文字在背景图之上 */
     text-align: center;
     color: var(--white);
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);  /* 文字阴影（增强可读性） */
 }
 
 .banner-slide .banner-content h2 {
@@ -438,7 +457,7 @@ button {
     padding: 8px 28px;
     background-color: var(--primary);
     color: var(--white);
-    border-radius: 25px;
+    border-radius: 25px;    /* 大圆角 = 胶囊形按钮 */
     font-size: 14px;
     font-weight: 600;
     transition: var(--transition);
@@ -446,18 +465,19 @@ button {
 
 .banner-slide .banner-content .btn-banner:hover {
     background-color: var(--primary-hover);
-    transform: translateY(-2px);
+    transform: translateY(-2px);  /* 悬停上浮 2px（微交互效果） */
 }
 
+/* 左右切换箭头：圆形半透明按钮 */
 .banner-btn {
     position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
+    top: 50%;                       /* 垂直居中 */
+    transform: translateY(-50%);    /* 自身高度的一半（精确居中） */
     z-index: 2;
     width: 44px;
     height: 44px;
-    background-color: rgba(255, 255, 255, 0.8);
-    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.8);  /* 半透明白色 */
+    border-radius: 50%;             /* 圆形 */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -469,23 +489,19 @@ button {
 }
 
 .banner-btn:hover {
-    background-color: var(--white);
+    background-color: var(--white); /* 悬停变完全不透明 */
     box-shadow: var(--shadow-hover);
 }
 
-.banner-btn.prev {
-    left: 20px;
-}
+.banner-btn.prev { left: 20px; }   /* 左箭头位置 */
+.banner-btn.next { right: 20px; }  /* 右箭头位置 */
 
-.banner-btn.next {
-    right: 20px;
-}
-
+/* 底部指示器圆点 */
 .banner-dots {
     position: absolute;
     bottom: 20px;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%);    /* 水平居中 */
     z-index: 2;
     display: flex;
     gap: 8px;
@@ -494,36 +510,36 @@ button {
 .banner-dots .dot {
     width: 10px;
     height: 10px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;             /* 圆形 */
+    background-color: rgba(255, 255, 255, 0.5);  /* 半透明白色 */
     cursor: pointer;
     transition: var(--transition);
 }
 
+/* 激活的指示器：变白 + 变宽（胶囊效果） */
 .banner-dots .dot.active {
     background-color: var(--white);
     width: 28px;
-    border-radius: 5px;
+    border-radius: 5px;             /* 半圆角 = 胶囊形 */
 }
 
 /* =====================================================
    六、主内容区域
-   包含快捷入口、商品区块标题、商品网格、页脚
-   实现原理：CSS Grid 布局通过 grid-template-columns 定义列数和列宽。
-           商品卡片悬停效果使用 transform: translateY() 上浮 + box-shadow 阴影增强，
-           配合 transition 实现平滑动画。图片缩放通过 transform: scale(1.05) 实现。
-           多行文本截断使用 -webkit-line-clamp 限制显示行数，配合 overflow: hidden 隐藏超出部分。
+   【答辩要点】包含快捷入口（5列Grid）、商品区块、商品网格（4列Grid）、页脚。
+   Grid 布局通过 grid-template-columns 定义列数和列宽。
+   悬停效果：translateY 上浮 + box-shadow 阴影加深 + scale 图片放大。
+   多行截断：-webkit-line-clamp 限制显示行数。
    ===================================================== */
 .main-content {
-    flex: 1;
+    flex: 1;            /* 占据剩余空间（将 footer 推到底部） */
     padding-bottom: 40px;
 }
 
-/* 快捷入口 - 5列网格布局，点击可快速筛选分类 */
+/* 快捷入口：5列网格 */
 .quick-entry {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(5, 1fr);  /* 5列等宽 */
+    gap: 16px;                              /* 间距 */
     margin: 0 auto 16px;
     max-width: 1200px;
     padding: 0 20px;
@@ -540,8 +556,8 @@ button {
 }
 
 .quick-entry-item:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-hover);
+    transform: translateY(-4px);    /* 悬停上浮 */
+    box-shadow: var(--shadow-hover); /* 阴影加深 */
 }
 
 .quick-entry-item .entry-icon {
@@ -554,14 +570,14 @@ button {
     font-weight: 500;
 }
 
-/* 区块标题 - 左侧彩色竖条 + 标题文字，右侧"查看更多"链接 */
+/* 区块标题：左侧彩色竖条 + 标题 */
 .section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-bottom: 20px;
     padding-bottom: 12px;
-    border-bottom: 2px solid var(--border);
+    border-bottom: 2px solid var(--border);  /* 底部灰色分割线 */
 }
 
 .section-title {
@@ -573,10 +589,11 @@ button {
     gap: 10px;
 }
 
+/* ::before 伪元素：创建左侧彩色竖条（不增加 HTML 结构） */
 .section-title::before {
-    content: '';
-    width: 4px;
-    height: 24px;
+    content: '';            /* 伪元素必须有 content */
+    width: 4px;             /* 竖条宽度 */
+    height: 24px;           /* 竖条高度 */
     background: linear-gradient(135deg, var(--primary), var(--secondary));
     border-radius: 2px;
 }
@@ -591,22 +608,24 @@ button {
     color: var(--primary);
 }
 
-/* 商品网格 - 4列布局，悬停上浮 + 图片缩放效果 */
+/* 商品网格：4列 Grid 布局 */
 .product-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(4, 1fr);  /* 4列等宽 */
+    gap: 16px;                              /* 列间距 */
 }
 
+/* 商品卡片 */
 .product-card {
     background-color: var(--white);
     border-radius: var(--radius);
-    overflow: hidden;
+    overflow: hidden;       /* 圆角裁剪（图片超出部分隐藏） */
     transition: var(--transition);
     box-shadow: var(--shadow);
-    cursor: pointer;
+    cursor: pointer;        /* 鼠标手型（可点击跳转详情） */
 }
 
+/* 悬停：上浮 6px + 阴影加深 */
 .product-card:hover {
     transform: translateY(-6px);
     box-shadow: var(--shadow-hover);
@@ -615,7 +634,7 @@ button {
 .product-card .product-image {
     height: 220px;
     background-color: #f0f0f0;
-    position: relative;
+    position: relative;     /* 为 tag 和 收藏按钮提供定位参考 */
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -625,14 +644,16 @@ button {
 .product-card .product-image img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    transition: transform 0.4s ease;
+    object-fit: cover;      /* 图片覆盖容器，保持比例裁剪 */
+    transition: transform 0.4s ease;  /* 图片缩放动画 */
 }
 
+/* 悬停时图片放大 5% */
 .product-card:hover .product-image img {
     transform: scale(1.05);
 }
 
+/* 商品标签（热卖）：渐变红色胶囊 */
 .product-card .product-image .product-tag {
     position: absolute;
     top: 10px;
@@ -640,7 +661,7 @@ button {
     background: linear-gradient(135deg, var(--primary), var(--secondary));
     color: var(--white);
     padding: 3px 10px;
-    border-radius: 12px;
+    border-radius: 12px;    /* 胶囊形 */
     font-size: 12px;
     font-weight: 600;
 }
@@ -649,22 +670,23 @@ button {
     padding: 14px;
 }
 
+/* 商品名称：最多显示2行，超出省略 */
 .product-card .product-name {
     font-size: 14px;
     font-weight: 500;
     color: var(--text);
     line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    display: -webkit-box;           /* 弹性盒子模型（旧版） */
+    -webkit-line-clamp: 2;          /* 限制 2 行 */
+    -webkit-box-orient: vertical;   /* 垂直方向 */
+    overflow: hidden;               /* 隐藏超出部分 */
     margin-bottom: 8px;
-    min-height: 40px;
+    min-height: 40px;               /* 保证空行也有高度 */
 }
 
 .product-card .product-price {
     display: flex;
-    align-items: baseline;
+    align-items: baseline;  /* 基线对齐（数字和符号对齐） */
     gap: 8px;
     margin-bottom: 8px;
 }
@@ -672,9 +694,10 @@ button {
 .product-card .price-current {
     font-size: 20px;
     font-weight: 700;
-    color: var(--primary);
+    color: var(--primary);  /* 红色价格 */
 }
 
+/* ::before 伪元素添加 ¥ 符号（CSS 方式，不增加 HTML） */
 .product-card .price-current::before {
     content: '¥';
     font-size: 14px;
@@ -683,12 +706,12 @@ button {
 .product-card .price-original {
     font-size: 13px;
     color: var(--text-muted);
-    text-decoration: line-through;
+    text-decoration: line-through;  /* 删除线（原价） */
 }
 
 .product-card .product-meta {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between;  /* 销量在左，按钮在右 */
     align-items: center;
     font-size: 12px;
     color: var(--text-muted);
@@ -702,7 +725,7 @@ button {
     background-color: var(--primary);
     color: var(--white);
     padding: 6px 14px;
-    border-radius: 14px;
+    border-radius: 14px;    /* 胶囊按钮 */
     font-size: 12px;
     font-weight: 500;
     transition: var(--transition);
@@ -712,17 +735,17 @@ button {
     background-color: var(--primary-hover);
 }
 
-/* 页脚 - 深色背景，4列网格布局，底部版权信息 */
+/* 页脚：深色背景 + 4列 Grid */
 .site-footer {
     background-color: var(--dark);
     color: #ccc;
     padding: 40px 0 20px;
-    margin-top: auto;
+    margin-top: auto;       /* 推到底部 */
 }
 
 .footer-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, 1fr);  /* 4列 */
     gap: 30px;
     margin-bottom: 30px;
 }
@@ -737,18 +760,18 @@ button {
 .footer-col p,
 .footer-col a {
     font-size: 13px;
-    line-height: 2;
+    line-height: 2;         /* 行高 2 倍（链接间距） */
     color: #999;
-    display: block;
+    display: block;         /* 块级（每个链接占一行） */
     transition: var(--transition);
 }
 
 .footer-col a:hover {
-    color: var(--primary);
+    color: var(--primary);  /* 悬停变红 */
 }
 
 .footer-bottom {
-    border-top: 1px solid #333;
+    border-top: 1px solid #333;  /* 上边框分割 */
     padding-top: 20px;
     text-align: center;
     font-size: 13px;
@@ -757,29 +780,27 @@ button {
 
 /* =====================================================
    七、登录/注册页面
-   居中卡片式布局，渐变背景，标签切换
-   表单验证状态样式（error/success）
-   实现原理：Flexbox + min-height: 100vh 实现垂直居中。
-           渐变背景用 linear-gradient 生成紫色到深紫的过渡。
-           表单状态通过 .error 和 .success 类控制：.error 使边框变红并显示错误信息，
-           .success 使边框变绿表示验证通过。display: none/block 切换表单显隐。
+   【答辩要点】全屏居中卡片式布局，渐变紫色背景。
+   标签切换通过 .active 类控制表单显隐。
+   表单验证状态：.error 红色边框 + 显示错误信息，.success 绿色边框。
    ===================================================== */
 .auth-page {
-    min-height: 100vh;
+    min-height: 100vh;              /* 全屏高度 */
     display: flex;
-    align-items: center;
-    justify-content: center;
+    align-items: center;            /* 垂直居中 */
+    justify-content: center;        /* 水平居中 */
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    /* 渐变背景：蓝色 → 紫色（135度对角线方向） */
     padding: 20px;
 }
 
 .auth-container {
     background-color: var(--white);
     border-radius: 12px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);  /* 大阴影（卡片浮起感） */
     width: 100%;
-    max-width: 440px;
-    overflow: hidden;
+    max-width: 440px;       /* 限制最大宽度 */
+    overflow: hidden;       /* 圆角裁剪 */
 }
 
 .auth-header {
@@ -803,6 +824,7 @@ button {
     font-size: 14px;
 }
 
+/* 登录/注册标签切换 */
 .auth-tabs {
     display: flex;
     margin: 24px 30px 0;
@@ -810,28 +832,31 @@ button {
 }
 
 .auth-tab {
-    flex: 1;
+    flex: 1;                /* 均分宽度 */
     text-align: center;
     padding: 12px 0;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     color: var(--text-muted);
-    border-bottom: 2px solid transparent;
-    margin-bottom: -2px;
+    border-bottom: 2px solid transparent;  /* 默认透明下划线 */
+    margin-bottom: -2px;    /* 抵消父元素的 border-bottom */
     transition: var(--transition);
 }
 
+/* 激活的标签：红色文字 + 红色下划线 */
 .auth-tab.active {
     color: var(--primary);
     border-bottom-color: var(--primary);
 }
 
+/* 表单默认隐藏 */
 .auth-form {
     padding: 30px;
     display: none;
 }
 
+/* 激活的表单显示 */
 .auth-form.active {
     display: block;
 }
@@ -849,7 +874,7 @@ button {
 }
 
 .form-group .input-wrapper {
-    position: relative;
+    position: relative;     /* 为输入框图标提供定位参考 */
 }
 
 .form-group input {
@@ -857,25 +882,28 @@ button {
     height: 44px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 0 16px 0 40px;
+    padding: 0 16px 0 40px;  /* 左侧留 40px 给图标 */
     font-size: 14px;
     transition: var(--transition);
 }
 
+/* 聚焦效果：红色边框 + 外发光 */
 .form-group input:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(228, 57, 60, 0.1);
+    box-shadow: 0 0 0 3px rgba(228, 57, 60, 0.1);  /* 红色外发光 */
 }
 
+/* 输入框内的图标 */
 .form-group .input-icon {
     position: absolute;
     left: 14px;
     top: 50%;
-    transform: translateY(-50%);
+    transform: translateY(-50%);  /* 垂直居中 */
     color: var(--text-muted);
     font-size: 16px;
 }
 
+/* 错误提示信息（默认隐藏） */
 .form-group .error-msg {
     color: var(--primary);
     font-size: 12px;
@@ -883,22 +911,27 @@ button {
     display: none;
 }
 
+/* 错误状态：红色边框 */
 .form-group.error input {
     border-color: var(--primary);
 }
 
+/* 错误状态：显示错误信息 */
 .form-group.error .error-msg {
     display: block;
 }
 
+/* 成功状态：绿色边框 */
 .form-group.success input {
     border-color: var(--success);
 }
 
+/* 提交按钮 */
 .btn-submit {
     width: 100%;
     height: 46px;
     background: linear-gradient(135deg, var(--primary), var(--secondary));
+    /* 渐变背景：红色 → 橙色 */
     color: var(--white);
     border-radius: var(--radius);
     font-size: 16px;
@@ -908,8 +941,8 @@ button {
 }
 
 .btn-submit:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
+    opacity: 0.9;               /* 悬停微透明 */
+    transform: translateY(-1px); /* 悬停上浮 */
 }
 
 .form-extra {
@@ -927,16 +960,14 @@ button {
 
 /* =====================================================
    八、商品详情页
-   左右两栏布局：图片画廊 + 商品信息
-   包含缩略图切换、数量选择器、标签页
-   实现原理：Grid 两栏布局 grid-template-columns: 1fr 1fr 实现左右等分。
-           缩略图通过 border 颜色变化表示选中状态（透明→红色）。
-           标签页使用与登录页相同的 active 类模式切换显示。
-           价格区域使用渐变背景突出展示，linear-gradient 生成浅红色渐变。
+   【答辩要点】Grid 两栏布局（左图右信息）。
+   缩略图通过 border 颜色变化表示选中状态。
+   标签页使用 .active 类切换（与登录标签模式一致）。
+   价格区域使用渐变背景突出显示。
    ===================================================== */
 .product-detail {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr;  /* 左右等宽 */
     gap: 40px;
     padding: 30px 0;
 }
@@ -945,6 +976,7 @@ button {
     position: relative;
 }
 
+/* 主图 */
 .detail-main-image {
     width: 100%;
     height: 420px;
@@ -963,6 +995,7 @@ button {
     object-fit: cover;
 }
 
+/* 缩略图列表 */
 .detail-thumbnails {
     display: flex;
     gap: 10px;
@@ -974,11 +1007,12 @@ button {
     border-radius: var(--radius-sm);
     overflow: hidden;
     cursor: pointer;
-    border: 2px solid transparent;
+    border: 2px solid transparent;  /* 默认透明边框 */
     transition: var(--transition);
     background-color: #f0f0f0;
 }
 
+/* 选中/悬停：红色边框 */
 .detail-thumbnail.active,
 .detail-thumbnail:hover {
     border-color: var(--primary);
@@ -990,6 +1024,7 @@ button {
     object-fit: cover;
 }
 
+/* 商品名称 */
 .detail-info .detail-name {
     font-size: 24px;
     font-weight: 700;
@@ -997,17 +1032,19 @@ button {
     margin-bottom: 12px;
 }
 
+/* 商品描述 */
 .detail-info .detail-desc {
     color: var(--text-light);
     font-size: 14px;
     margin-bottom: 20px;
     padding: 12px 16px;
-    background-color: #fafafa;
+    background-color: #fafafa;      /* 浅灰背景 */
     border-radius: var(--radius-sm);
 }
 
+/* 价格区域：红色渐变背景 */
 .detail-info .detail-price-area {
-    background: linear-gradient(135deg, #fff5f5, #fff0f0);
+    background: linear-gradient(135deg, #fff5f5, #fff0f0);  /* 浅红渐变 */
     padding: 20px;
     border-radius: var(--radius);
     margin-bottom: 20px;
@@ -1026,17 +1063,18 @@ button {
 }
 
 .detail-info .detail-price::before {
-    content: '¥';
+    content: '¥';           /* CSS 方式添加 ¥ */
     font-size: 20px;
 }
 
 .detail-info .detail-original {
     font-size: 14px;
     color: var(--text-muted);
-    text-decoration: line-through;
+    text-decoration: line-through;  /* 删除线 */
     margin-left: 12px;
 }
 
+/* 元信息：销量、评分、库存 */
 .detail-info .detail-meta {
     display: flex;
     gap: 30px;
@@ -1045,6 +1083,7 @@ button {
     margin-bottom: 24px;
 }
 
+/* 数量选择器 */
 .detail-info .quantity-selector {
     display: flex;
     align-items: center;
@@ -1073,10 +1112,12 @@ button {
     background-color: #f5f5f5;
 }
 
+/* 减号按钮：左侧圆角 */
 .detail-info .qty-btn:first-of-type {
     border-radius: var(--radius-sm) 0 0 var(--radius-sm);
 }
 
+/* 加号按钮：右侧圆角 */
 .detail-info .qty-btn:last-of-type {
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
@@ -1085,17 +1126,19 @@ button {
     width: 60px;
     height: 36px;
     border: 1px solid var(--border);
-    border-left: none;
-    border-right: none;
+    border-left: none;      /* 与减号按钮无缝 */
+    border-right: none;     /* 与加号按钮无缝 */
     text-align: center;
     font-size: 14px;
 }
 
+/* 操作按钮 */
 .detail-info .detail-actions {
     display: flex;
     gap: 12px;
 }
 
+/* 立即购买按钮：橙色渐变 */
 .detail-info .btn-buy-now {
     flex: 1;
     height: 48px;
@@ -1111,6 +1154,7 @@ button {
     opacity: 0.9;
 }
 
+/* 加入购物车按钮：红色 */
 .detail-info .btn-add-to-cart {
     flex: 1;
     height: 48px;
@@ -1126,6 +1170,7 @@ button {
     background-color: var(--primary-hover);
 }
 
+/* 详情标签页 */
 .detail-tabs {
     margin-top: 40px;
 }
@@ -1147,34 +1192,33 @@ button {
     transition: var(--transition);
 }
 
+/* 激活的标签：红色文字 + 红色下划线 */
 .detail-tab-header.active {
     color: var(--primary);
     border-bottom-color: var(--primary);
 }
 
 .detail-tab-content {
-    display: none;
+    display: none;          /* 默认隐藏 */
     line-height: 1.8;
     color: var(--text-light);
 }
 
 .detail-tab-content.active {
-    display: block;
+    display: block;         /* 激活时显示 */
 }
 
 /* =====================================================
    九、购物车页面
-   表格式布局，支持全选/单选、数量修改、删除
-   底部固定结算栏，显示总价和结算按钮
-   实现原理：使用 Grid 布局模拟表格，grid-template-columns 定义 6 列宽度。
-           表头和每一行共享相同的列定义，实现对齐效果。
-           复选框使用 accent-color 属性设置选中颜色为主题红色。
-           结算栏独立于表格之外，使用 Flexbox 布局，空间分布在两端。
+   【答辩要点】Grid 模拟表格布局，6列结构。
+   复选框使用 accent-color 设置选中颜色。
+   底部结算栏独立于表格之外。
    ===================================================== */
 .cart-page {
     padding: 30px 0;
 }
 
+/* 空购物车状态 */
 .cart-empty {
     text-align: center;
     padding: 80px 20px;
@@ -1201,6 +1245,7 @@ button {
     font-weight: 600;
 }
 
+/* 购物车表格 */
 .cart-table {
     width: 100%;
     background-color: var(--white);
@@ -1209,30 +1254,33 @@ button {
     box-shadow: var(--shadow);
 }
 
+/* 表头：6列 Grid 布局 */
 .cart-table-header {
     display: grid;
     grid-template-columns: 50px 1fr 120px 140px 140px 100px;
+    /* 列定义：复选框 | 商品信息(弹性) | 单价 | 数量 | 小计 | 操作 */
     padding: 14px 20px;
-    background-color: #fafafa;
+    background-color: #fafafa;    /* 浅灰表头背景 */
     font-size: 14px;
     font-weight: 600;
     color: var(--text-light);
     align-items: center;
 }
 
+/* 购物车行：与表头相同的6列布局 */
 .cart-item {
     display: grid;
     grid-template-columns: 50px 1fr 120px 140px 140px 100px;
     padding: 16px 20px;
     align-items: center;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--border);  /* 行分隔线 */
 }
 
 .cart-item .item-checkbox input {
     width: 18px;
     height: 18px;
     cursor: pointer;
-    accent-color: var(--primary);
+    accent-color: var(--primary);  /* 复选框选中颜色为红色 */
 }
 
 .cart-item .item-product {
@@ -1247,7 +1295,7 @@ button {
     border-radius: var(--radius-sm);
     overflow: hidden;
     background-color: #f0f0f0;
-    flex-shrink: 0;
+    flex-shrink: 0;         /* 不压缩（保持80px） */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1278,7 +1326,7 @@ button {
 .cart-item .item-total {
     font-size: 16px;
     font-weight: 700;
-    color: var(--primary);
+    color: var(--primary);  /* 小计金额用红色突出 */
 }
 
 .cart-item .btn-delete {
@@ -1289,13 +1337,14 @@ button {
 }
 
 .cart-item .btn-delete:hover {
-    color: var(--primary);
+    color: var(--primary);  /* 悬停变红（警示色） */
 }
 
+/* 底部结算栏 */
 .cart-footer {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: space-between;  /* 全选在左，汇总在右 */
     padding: 16px 20px;
     background-color: var(--white);
     border-radius: var(--radius);
@@ -1330,9 +1379,10 @@ button {
 .cart-footer .total-price {
     font-size: 24px;
     font-weight: 700;
-    color: var(--primary);
+    color: var(--primary);  /* 总价红色大字 */
 }
 
+/* 结算按钮：渐变背景 */
 .cart-footer .btn-checkout {
     padding: 14px 48px;
     background: linear-gradient(135deg, var(--primary), var(--secondary));
@@ -1349,12 +1399,9 @@ button {
 
 /* =====================================================
    十、结算/订单页面
-   左右两栏：收货地址+支付方式+商品列表 | 订单汇总
-   右侧汇总栏使用 sticky 定位跟随滚动
-   实现原理：Grid 布局 grid-template-columns: 1fr 380px 实现左宽右窄。
-           右侧汇总栏使用 position: sticky + top: 90px，在用户滚动时
-           始终保持在视口顶部 90px 位置，确保提交按钮始终可见。
-           商品列表设置 max-height + overflow-y: auto 实现滚动。
+   【答辩要点】Grid 两栏布局：左宽右窄（1fr 380px）。
+   右侧汇总使用 position: sticky 固定在视口，始终可见。
+   商品列表设置 max-height + overflow-y: auto 实现滚动。
    ===================================================== */
 .checkout-page {
     padding: 30px 0;
@@ -1362,7 +1409,7 @@ button {
 
 .checkout-grid {
     display: grid;
-    grid-template-columns: 1fr 380px;
+    grid-template-columns: 1fr 380px;  /* 左自适应 + 右固定 380px */
     gap: 20px;
 }
 
@@ -1379,12 +1426,12 @@ button {
     font-weight: 600;
     margin-bottom: 16px;
     padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);  /* 标题下划线 */
 }
 
 .form-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr;  /* 两列（如收货人 + 手机号） */
     gap: 16px;
 }
 
@@ -1393,12 +1440,13 @@ button {
 }
 
 .form-group.full-width {
-    grid-column: 1 / -1;
+    grid-column: 1 / -1;  /* 横跨所有列 */
 }
 
+/* 结算商品列表：可滚动 */
 .checkout-items {
     max-height: 400px;
-    overflow-y: auto;
+    overflow-y: auto;       /* 超出时纵向滚动 */
 }
 
 .checkout-item {
@@ -1428,7 +1476,7 @@ button {
 }
 
 .checkout-item .co-info {
-    flex: 1;
+    flex: 1;  /* 占据剩余空间 */
 }
 
 .checkout-item .co-name {
@@ -1447,13 +1495,14 @@ button {
     color: var(--primary);
 }
 
+/* 订单汇总（右侧 sticky） */
 .checkout-summary {
     background-color: var(--white);
     border-radius: var(--radius);
     padding: 24px;
     box-shadow: var(--shadow);
-    position: sticky;
-    top: 90px;
+    position: sticky;       /* 粘性定位 */
+    top: 90px;              /* 距离顶部 90px（给 header 留空间） */
 }
 
 .checkout-summary h3 {
@@ -1466,21 +1515,23 @@ button {
 
 .summary-row {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between;  /* 标签在左，金额在右 */
     padding: 8px 0;
     font-size: 14px;
     color: var(--text-light);
 }
 
+/* 应付总额：突出显示 */
 .summary-row.total {
     font-size: 18px;
     font-weight: 700;
     color: var(--primary);
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--border);  /* 上分割线 */
     padding-top: 16px;
     margin-top: 8px;
 }
 
+/* 提交订单按钮 */
 .btn-place-order {
     width: 100%;
     height: 48px;
@@ -1499,12 +1550,9 @@ button {
 
 /* =====================================================
    十一、个人中心页面
-   左侧菜单 + 右侧内容区布局
-   包含订单列表、个人信息、收货地址、账号设置
-   实现原理：Grid 布局 grid-template-columns: 240px 1fr 实现左侧固定宽度菜单 + 右侧自适应内容区。
-           菜单项通过 border-left 实现左侧高亮指示条，默认透明，选中时变红色。
-           头像区域使用渐变背景突出显示用户信息。
-           面板通过 display: none/block 切换（与标签页模式一致）。
+   【答辩要点】经典后台布局：左侧固定宽度菜单 + 右侧自适应内容。
+   菜单选中效果：border-left 红色指示条 + 浅红背景。
+   面板切换：display: none/block（与标签页模式一致）。
    ===================================================== */
 .profile-page {
     padding: 30px 0;
@@ -1512,7 +1560,7 @@ button {
 
 .profile-layout {
     display: grid;
-    grid-template-columns: 240px 1fr;
+    grid-template-columns: 240px 1fr;  /* 左侧 240px + 右侧自适应 */
     gap: 20px;
 }
 
@@ -1523,18 +1571,19 @@ button {
     overflow: hidden;
 }
 
+/* 头像区域：紫色渐变背景 */
 .profile-avatar-area {
     padding: 30px 20px;
     text-align: center;
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #667eea, #764ba2);  /* 紫色渐变 */
     color: var(--white);
 }
 
 .profile-avatar {
     width: 80px;
     height: 80px;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;                         /* 圆形 */
+    background-color: rgba(255, 255, 255, 0.3); /* 半透明白色 */
     margin: 0 auto 12px;
     display: flex;
     align-items: center;
@@ -1553,6 +1602,7 @@ button {
     margin-top: 4px;
 }
 
+/* 菜单列表 */
 .profile-menu {
     padding: 10px 0;
 }
@@ -1565,9 +1615,10 @@ button {
     font-size: 14px;
     cursor: pointer;
     transition: var(--transition);
-    border-left: 3px solid transparent;
+    border-left: 3px solid transparent;  /* 左侧透明指示条 */
 }
 
+/* 悬停/选中：浅红背景 + 红色左指示条 */
 .profile-menu-item:hover,
 .profile-menu-item.active {
     background-color: var(--primary-light);
@@ -1576,6 +1627,7 @@ button {
     font-weight: 600;
 }
 
+/* 右侧内容区 */
 .profile-content {
     background-color: var(--white);
     border-radius: var(--radius);
@@ -1584,10 +1636,12 @@ button {
     min-height: 400px;
 }
 
+/* 面板：默认隐藏 */
 .profile-panel {
     display: none;
 }
 
+/* 激活的面板：显示 */
 .profile-panel.active {
     display: block;
 }
@@ -1600,6 +1654,7 @@ button {
     border-bottom: 1px solid var(--border);
 }
 
+/* 订单卡片 */
 .order-card {
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -1659,63 +1714,57 @@ button {
 
 /* =====================================================
    十二、Toast 提示消息
-   页面顶部居中弹出，3秒后自动消失
-   支持 success/error/info 三种类型
-   实现原理：position: fixed 固定在视口顶部，left: 50% + transform: translateX(-50%) 水平居中。
-           @keyframes 定义两个动画：toastIn（从上方淡入）和 toastOut（向上淡出）。
-           animation 属性使用 forwards 填充模式，使动画结束后保持最终状态。
-           不同类型的 toast 通过 .success/.error/.info 类设置不同背景色。
+   【答辩要点】position: fixed 固定在视口顶部。
+   left: 50% + transform: translateX(-50%) 实现水平居中。
+   @keyframes 定义入场（toastIn）和出场（toastOut）动画。
+   animation 的 forwards 填充模式保留最终状态。
    ===================================================== */
 .toast {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 9999;
+    position: fixed;            /* 固定定位（不随滚动移动） */
+    top: 20px;                  /* 距顶部 20px */
+    left: 50%;                  /* 左侧 50% */
+    transform: translateX(-50%);/* 向左平移自身一半（水平居中） */
+    z-index: 9999;              /* 最高层级 */
     padding: 12px 28px;
     border-radius: var(--radius);
     color: var(--white);
     font-size: 14px;
     font-weight: 500;
+    /* 动画：0.3s 淡入 → 等待 2.5s → 0.3s 淡出 */
     animation: toastIn 0.3s ease, toastOut 0.3s ease 2.5s forwards;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
-.toast.success {
-    background-color: var(--success);
-}
+/* 三种类型的不同背景色 */
+.toast.success { background-color: var(--success); }  /* 绿色 */
+.toast.error   { background-color: var(--primary); }  /* 红色 */
+.toast.info    { background-color: var(--info); }      /* 蓝色 */
 
-.toast.error {
-    background-color: var(--primary);
-}
-
-.toast.info {
-    background-color: var(--info);
-}
-
+/* 入场动画：从上方淡入 */
 @keyframes toastIn {
     from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
+/* 出场动画：向上淡出 */
 @keyframes toastOut {
     from { opacity: 1; transform: translateX(-50%) translateY(0); }
-    to { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    to   { opacity: 0; transform: translateX(-50%) translateY(-20px); }
 }
 
-/* Modal 弹窗 - 半透明遮罩 + 居中卡片 */
+/* Modal 弹窗：半透明遮罩 + 居中卡片 */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.5);  /* 半透明黑色遮罩 */
     z-index: 2000;
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: fadeIn 0.2s ease;
+    animation: fadeIn 0.2s ease;  /* 淡入动画 */
 }
 
 .modal {
@@ -1725,7 +1774,7 @@ button {
     max-width: 500px;
     width: 90%;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-    animation: scaleIn 0.3s ease;
+    animation: scaleIn 0.3s ease;  /* 缩放入场 */
 }
 
 .modal h3 {
@@ -1742,9 +1791,10 @@ button {
 .modal-actions {
     display: flex;
     gap: 12px;
-    justify-content: flex-end;
+    justify-content: flex-end;  /* 按钮靠右 */
 }
 
+/* 次要按钮：灰色 */
 .btn-secondary {
     padding: 10px 24px;
     background-color: #f0f0f0;
@@ -1759,6 +1809,7 @@ button {
     background-color: #e0e0e0;
 }
 
+/* 主要按钮：红色 */
 .btn-primary {
     padding: 10px 24px;
     background-color: var(--primary);
@@ -1773,29 +1824,28 @@ button {
     background-color: var(--primary-hover);
 }
 
+/* 遮罩淡入 */
 @keyframes fadeIn {
     from { opacity: 0; }
-    to { opacity: 1; }
+    to   { opacity: 1; }
 }
 
+/* 卡片缩放入场 */
 @keyframes scaleIn {
     from { transform: scale(0.9); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    to   { transform: scale(1); opacity: 1; }
 }
 
 /* =====================================================
    十三、新功能样式
-   收藏按钮、排序栏、回到顶部、搜索历史
-   实现原理：收藏按钮使用 position: absolute 定位在图片右上角，
-           filter: drop-shadow 添加阴影（区别于 box-shadow，drop-shadow 跟随元素形状）。
-           排序栏使用 Flexbox 水平排列排序按钮，按钮使用圆角胶囊形状（border-radius: 20px）。
-           回到顶部按钮初始 opacity:0 + visibility:hidden 隐藏，
-           滚动时 JS 添加 .show 类触发 opacity:1 过渡动画。
-           搜索历史面板使用 position: absolute 定位在搜索框下方，
-           通过 display:none/.show{display:block} 切换显隐。
+   【答辩要点】收藏按钮、排序栏、回到顶部、搜索历史。
+   收藏按钮使用 position: absolute 定位在图片右上角。
+   排序按钮使用胶囊形状（border-radius: 20px）。
+   回到顶部使用 opacity + visibility 控制显隐。
+   搜索历史面板使用绝对定位在搜索框下方。
    ===================================================== */
 
-/* 收藏按钮 - 位于商品图片右上角 */
+/* 收藏按钮：定位在商品图片右上角 */
 .product-card .favorite-btn {
     position: absolute;
     top: 10px;
@@ -1805,20 +1855,23 @@ button {
     z-index: 2;
     transition: transform 0.3s ease;
     filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+    /* drop-shadow 与 box-shadow 不同：跟随元素形状（包括透明区域） */
 }
+
 .product-card .favorite-btn:hover {
-    transform: scale(1.3);
+    transform: scale(1.3);  /* 悬停放大 30% */
 }
+
+/* 收藏动画：心跳效果 */
 .product-card .favorite-btn.active {
     animation: heartBeat 0.4s ease;
 }
 
-/* 收藏动画 */
 @keyframes heartBeat {
-    0% { transform: scale(1); }
-    25% { transform: scale(1.3); }
-    50% { transform: scale(0.95); }
-    100% { transform: scale(1); }
+    0%   { transform: scale(1); }
+    25%  { transform: scale(1.3); }   /* 放大 */
+    50%  { transform: scale(0.95); }  /* 缩小 */
+    100% { transform: scale(1); }     /* 恢复 */
 }
 
 /* 商品排序栏 */
@@ -1832,25 +1885,30 @@ button {
     border-radius: var(--radius);
     box-shadow: var(--shadow);
 }
+
 .sort-bar .sort-label {
     font-size: 14px;
     color: var(--text-light);
     margin-right: 8px;
 }
+
 .sort-bar .sort-btn {
     padding: 6px 16px;
     border: 1px solid var(--border);
-    border-radius: 20px;
+    border-radius: 20px;        /* 大圆角 = 胶囊形 */
     font-size: 13px;
     background: var(--white);
     cursor: pointer;
     transition: var(--transition);
     color: var(--text-light);
 }
+
 .sort-bar .sort-btn:hover {
     border-color: var(--primary);
     color: var(--primary);
 }
+
+/* 激活的排序按钮：红色背景 */
 .sort-bar .sort-btn.active {
     background: var(--primary);
     color: var(--white);
@@ -1859,22 +1917,24 @@ button {
 
 /* 搜索历史面板 */
 .search-history-panel {
-    position: absolute;
-    top: 42px;
+    position: absolute;         /* 相对于搜索框定位 */
+    top: 42px;                  /* 搜索框高度 + 2px 边框 */
     left: 0;
     right: 0;
     background: var(--white);
     border: 1px solid var(--border);
-    border-radius: 0 0 var(--radius) var(--radius);
+    border-radius: 0 0 var(--radius) var(--radius);  /* 底部圆角 */
     box-shadow: var(--shadow-hover);
     z-index: 100;
-    display: none;
+    display: none;              /* 默认隐藏 */
     max-height: 240px;
-    overflow-y: auto;
+    overflow-y: auto;           /* 超出滚动 */
 }
+
 .search-history-panel.show {
-    display: block;
+    display: block;             /* 显示面板 */
 }
+
 .search-history-panel .history-header {
     display: flex;
     justify-content: space-between;
@@ -1884,12 +1944,14 @@ button {
     font-size: 13px;
     color: var(--text-muted);
 }
+
 .search-history-panel .history-header .clear-btn {
     color: var(--primary);
     cursor: pointer;
     font-size: 12px;
     background: none;
 }
+
 .search-history-panel .history-item {
     padding: 10px 16px;
     font-size: 14px;
@@ -1899,9 +1961,11 @@ button {
     align-items: center;
     gap: 8px;
 }
+
 .search-history-panel .history-item:hover {
-    background-color: var(--primary-light);
+    background-color: var(--primary-light);  /* 悬停浅红背景 */
 }
+
 .search-history-panel .history-item .history-icon {
     color: var(--text-muted);
     font-size: 12px;
@@ -1916,7 +1980,7 @@ button {
     height: 44px;
     background: var(--primary);
     color: var(--white);
-    border-radius: 50%;
+    border-radius: 50%;         /* 圆形 */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1924,73 +1988,79 @@ button {
     font-weight: bold;
     cursor: pointer;
     z-index: 999;
+    /* 默认隐藏 */
     opacity: 0;
     visibility: hidden;
-    transform: translateY(20px);
+    transform: translateY(20px);  /* 向下偏移（隐藏时） */
     transition: all 0.3s ease;
-    box-shadow: 0 4px 16px rgba(228, 57, 60, 0.4);
+    box-shadow: 0 4px 16px rgba(228, 57, 60, 0.4);  /* 红色发光阴影 */
 }
+
+/* 显示状态：淡入 + 上移 */
 #back-to-top.show {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0);
+    transform: translateY(0);     /* 回到原位 */
 }
+
 #back-to-top:hover {
     background: var(--primary-hover);
-    transform: translateY(-4px);
+    transform: translateY(-4px);  /* 悬停上浮 */
 }
 
 /* =====================================================
    十四、响应式布局
-   根据屏幕宽度调整网格列数和布局方式
-   实现原理：@media 媒体查询根据视口宽度断点应用不同样式。
-           1024px 断点：商品网格从 4 列变为 3 列，快捷入口从 5 列变为 3 列，
-                     结算页从左右两栏变为上下单栏。
-           768px 断点：商品网格变为 2 列，详情页从左右两栏变为上下排列，
-                     个人中心从左右变为上下，页脚从 4 列变为 2 列。
-           480px 断点：进一步缩小轮播图高度，快捷入口变为 2 列。
-           这是移动优先设计策略的桌面端实现——默认样式为桌面端，通过媒体查询逐步适配小屏。
+   【答辩要点】使用 @media 媒体查询根据屏幕宽度调整布局。
+   三个断点：
+   - 1024px：平板横屏（商品 4→3 列，结算页变单栏）
+   - 768px：平板竖屏（商品 3→2 列，详情页变单栏）
+   - 480px：手机（进一步缩小）
+   策略：桌面优先（默认样式为大屏），逐级适配小屏。
    ===================================================== */
+
+/* 平板横屏 (≤1024px) */
 @media (max-width: 1024px) {
     .product-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, 1fr);  /* 4列→3列 */
     }
     .quick-entry {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(3, 1fr);  /* 5列→3列 */
     }
     .checkout-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr;  /* 结算页变单栏 */
     }
 }
 
+/* 平板竖屏 (≤768px) */
 @media (max-width: 768px) {
     .product-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, 1fr);  /* 3列→2列 */
     }
     .search-box {
         margin: 0 20px;
-        flex: 1;
+        flex: 1;  /* 搜索框占据更多空间 */
     }
     .product-detail {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr;  /* 详情页变单栏 */
     }
     .profile-layout {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr;  /* 个人中心变单栏 */
     }
     .cart-table-header,
     .cart-item {
-        grid-template-columns: 40px 1fr 80px 100px 100px 60px;
+        grid-template-columns: 40px 1fr 80px 100px 100px 60px;  /* 缩小列宽 */
         font-size: 12px;
     }
     .footer-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, 1fr);  /* 页脚 4→2 列 */
     }
 }
 
+/* 手机 (≤480px) */
 @media (max-width: 480px) {
     .product-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
+        grid-template-columns: 1fr 1fr;  /* 保持 2 列 */
+        gap: 10px;  /* 减小间距 */
     }
     .banner-container {
         height: 200px;
@@ -1999,6 +2069,6 @@ button {
         font-size: 20px;
     }
     .quick-entry {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, 1fr);  /* 3列→2列 */
     }
 }

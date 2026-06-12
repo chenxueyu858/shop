@@ -8,7 +8,7 @@
 </head>
 <body>
     <!-- =============================================
-         顶部信息栏
+         顶部信息栏 + 主头部（与首页共用）
          ============================================= -->
     <div class="top-bar">
         <div class="container">
@@ -26,7 +26,6 @@
         </div>
     </div>
 
-    <!-- 主头部 -->
     <header class="main-header">
         <div class="container">
             <a href="index.html" class="logo">
@@ -53,13 +52,18 @@
 
     <!-- =============================================
          个人中心主体
-         左侧菜单 + 右侧内容面板
-         实现方式：renderProfile() 动态加载用户数据 + classList.add/remove('active') 切换面板
-         实现原理：采用经典的后台管理系统布局——左侧固定宽度菜单 + 右侧自适应内容区。
-                  菜单项通过 data-panel 属性关联右侧面板 ID，点击时切换 active 类。
-                  头像区域使用渐变背景突出显示，菜单选中项通过 border-left 红色指示条 + 浅红背景标识。
-                  面板通过 display:none/block 切换显示（与标签页切换模式一致）。
-                  右侧内容包含 5 个面板：我的订单、我的收藏、个人信息、收货地址、账号设置。
+         【答辩要点】经典的后台管理系统布局：
+         左侧：固定宽度菜单（240px）+ 用户头像区域
+         右侧：自适应内容区（5个面板）
+         
+         面板列表：
+         1. 我的订单：订单卡片列表（从 LocalStorage 读取）
+         2. 我的收藏：收藏商品列表（【新功能】）
+         3. 个人信息：只读展示（用户名/手机号/注册时间）
+         4. 收货地址：表单编辑 + 保存到 LocalStorage
+         5. 账号设置：修改密码（验证原密码 → 更新 LocalStorage）
+         
+         数据来源：全部来自 LocalStorage，无需服务器请求。
          ============================================= -->
     <main class="main-content">
         <div class="container">
@@ -70,23 +74,24 @@
                     <a href="login.html" class="btn-go-shopping">去登录</a>
                 </div>
 
-                <!-- 个人中心布局 -->
+                <!-- 个人中心布局：Grid 两栏 -->
+                <!-- grid-template-columns: 240px 1fr -->
                 <div class="profile-layout" id="profile-layout">
                     <!-- ===== 左侧菜单 ===== -->
                     <aside class="profile-sidebar">
-                        <!-- 用户头像区域（紫色渐变背景） -->
+                        <!-- 用户头像区域：紫色渐变背景 -->
                         <div class="profile-avatar-area">
-                            <div class="profile-avatar">👤</div>
-                            <div class="user-name" id="profile-name">用户名</div>
-                            <div class="user-id" id="profile-id">ID: ---</div>
+                            <div class="profile-avatar">👤</div>          <!-- 默认头像图标 -->
+                            <div class="user-name" id="profile-name">用户名</div>    <!-- JS 填充 -->
+                            <div class="user-id" id="profile-id">ID: ---</div>       <!-- JS 填充 -->
                         </div>
-                        <!-- 菜单列表 -->
+                        <!-- 菜单列表：每个 item 通过 data-panel 关联右侧面板 -->
                         <nav class="profile-menu">
                             <div class="profile-menu-item active" data-panel="orders">
-                                📋 我的订单
+                                📋 我的订单      <!-- 默认激活 -->
                             </div>
                             <div class="profile-menu-item" data-panel="favorites">
-                                ❤️ 我的收藏
+                                ❤️ 我的收藏      <!-- 【新功能】 -->
                             </div>
                             <div class="profile-menu-item" data-panel="info">
                                 👤 个人信息
@@ -107,6 +112,7 @@
                             <h3>我的订单</h3>
                             <div id="orders-list">
                                 <p style="color:#999;text-align:center;padding:40px;">暂无订单</p>
+                                <!-- JS 动态渲染订单卡片 -->
                             </div>
                         </div>
 
@@ -115,16 +121,18 @@
                             <h3>我的收藏</h3>
                             <div id="favorite-list">
                                 <p style="color:#999;text-align:center;padding:40px;">暂无收藏商品</p>
+                                <!-- JS 通过 renderFavoriteList() 动态渲染 -->
                             </div>
                         </div>
 
-                        <!-- 面板3：个人信息 -->
+                        <!-- 面板3：个人信息（只读） -->
                         <div class="profile-panel" id="panel-info">
                             <h3>个人信息</h3>
                             <div style="max-width:400px;">
                                 <div class="form-group">
                                     <label>用户名</label>
                                     <div class="input-wrapper">
+                                        <!-- readonly：只读不可编辑，灰色背景 -->
                                         <input type="text" id="info-username" readonly style="padding-left:16px;background:#f5f5f5;">
                                     </div>
                                 </div>
@@ -229,75 +237,68 @@
     <script>
         // =============================================
         // 个人中心页专属脚本
-        // 函数: renderProfile()、renderOrders()、saveAddress()、changePassword()
-        // 实现方式：localStorage 读取用户数据 + Array.map().join('') 渲染订单列表
-        //           + URLSearchParams 支持面板切换参数
-        // 实现原理：个人中心的数据来源是 LocalStorage，不需要服务器请求。
-        //           renderProfile() 负责初始化整个页面：
-        //           1. 检查登录状态（未登录显示提示）
-        //           2. 填充用户信息（从 shop_users 查找当前用户）
-        //           3. 加载收货地址（从 shop_addr_{用户ID} 读取）
-        //           4. 渲染订单列表（从 shop_orders_{用户ID} 读取）
-        //           菜单切换通过绑定 click 事件实现，切换到收藏面板时调用 renderFavoriteList()。
-        //           URL 参数支持直接跳转到指定面板（如 ?tab=orders）。
+        // 【答辩要点】个人中心是用户数据的管理中心。
+        // 所有数据来自 LocalStorage，无需服务器请求。
+        // 
+        // 核心功能：
+        //   1. renderProfile()：初始化页面（加载用户信息+订单+地址）
+        //   2. renderOrders()：渲染订单列表（嵌套 map 遍历）
+        //   3. 菜单切换：点击菜单项切换右侧面板
+        //   4. saveAddress()：保存收货地址
+        //   5. changePassword()：修改密码（验证原密码+更新）
         // =============================================
 
         /**
          * 渲染个人中心页面
-         * 根据登录状态显示不同内容
-         * 实现方式：JSON.parse(localStorage.getItem()) 读取用户数据 + value 赋值填充表单
-         * 实现原理：通过 AppState.currentUser 判断登录状态。
-         *           未登录时显示 profile-not-login 区域，隐藏 profile-layout。
-         *           已登录时填充用户名、ID，从 shop_users 查找完整用户信息填充个人信息面板。
-         *           收货地址也从 LocalStorage 独立 key 读取并预填表单。
-         *           input 的 value 属性直接赋值即可显示数据，实现数据到视图的单向绑定。
+         * 【答辩要点】根据登录状态显示不同内容。
+         * 未登录 → 显示登录提示
+         * 已登录 → 加载用户信息、订单、收货地址
          */
         function renderProfile() {
-            // 未登录时显示登录提示
+            // === 未登录检查 ===
             if (!AppState.currentUser) {
-                document.getElementById('profile-not-login').style.display = '';
-                document.getElementById('profile-layout').style.display = 'none';
+                document.getElementById('profile-not-login').style.display = '';  // 显示未登录提示
+                document.getElementById('profile-layout').style.display = 'none';  // 隐藏布局
                 return;
             }
             
-            // 已登录：显示用户信息
-            document.getElementById('profile-layout').style.display = '';
+            // === 已登录：显示用户信息 ===
+            document.getElementById('profile-layout').style.display = '';  // 显示布局
+            // 填充头像区域的用户名和 ID
             document.getElementById('profile-name').textContent = AppState.currentUser.name;
             document.getElementById('profile-id').textContent = 'ID: ' + AppState.currentUser.id;
             
-            // 加载用户详细信息（从 LocalStorage 用户表中查找）
+            // === 从 LocalStorage 查找完整用户信息 ===
             const users = JSON.parse(localStorage.getItem('shop_users') || '[]');
             const user = users.find(u => u.id === AppState.currentUser.id);
             
             if (user) {
+                // 填充个人信息面板（只读）
                 document.getElementById('info-username').value = user.username;
                 document.getElementById('info-phone').value = user.phone;
                 document.getElementById('info-regtime').value = formatDate(user.registerTime);
+                // formatDate：全局工具函数，将 ISO 时间转为可读格式
             }
             
-            // 加载保存的收货地址
+            // === 加载收货地址 ===
+            // 从 LocalStorage 独立 key 读取（shop_addr_{用户ID}）
             const savedAddr = JSON.parse(localStorage.getItem(`shop_addr_${AppState.currentUser.id}`) || '{}');
             document.getElementById('addr-name').value = savedAddr.name || '';
             document.getElementById('addr-phone').value = savedAddr.phone || '';
             document.getElementById('addr-detail').value = savedAddr.address || '';
             
-            // 渲染订单列表和收藏列表
+            // === 渲染订单列表 ===
             renderOrders();
         }
         
         /**
          * 渲染订单列表
-         * 从 LocalStorage 读取当前用户的订单数据
-         * 实现方式：getOrders() 获取订单 + Array.map().join('') 生成订单卡片 HTML
-         * 实现原理：getOrders() 从 LocalStorage 读取 shop_orders_{用户ID} 键的数据，
-         *           返回按时间倒序排列的订单数组（unshift 保证最新在前）。
-         *           每个订单渲染为一张卡片，包含：
-         *           订单号+时间+状态（订单头部）、商品缩略图列表、总件数+总金额（订单底部）。
-         *           订单商品使用嵌套 map()：外层遍历订单，内层遍历每个订单的商品列表。
-         *           无订单时显示"暂无订单"空状态。
+         * 【答辩要点】从 LocalStorage 读取订单数据，按时间倒序渲染。
+         * 使用嵌套 map()：外层遍历订单 → 内层遍历订单商品。
+         * 每个订单卡片包含：订单号+时间+状态 | 商品缩略图 | 总件数+总金额
          */
         function renderOrders() {
-            const orders = getOrders();
+            const orders = getOrders();  // 全局函数：从 LocalStorage 读取订单
             const ordersList = document.getElementById('orders-list');
             
             // 无订单时显示空状态
@@ -306,16 +307,16 @@
                 return;
             }
             
-            // 渲染订单卡片列表
+            // ★ 嵌套 map()：外层遍历订单，内层遍历商品
             ordersList.innerHTML = orders.map(order => `
                 <div class="order-card">
-                    <!-- 订单头部：订单号 + 时间 + 状态 -->
+                    <!-- 订单头部 -->
                     <div class="order-header">
                         <span>订单号: ${order.id}</span>
-                        <span>${formatDate(order.createTime)}</span>
-                        <span class="order-status">${order.status}</span>
+                        <span>${formatDate(order.createTime)}</span>  <!-- 格式化时间 -->
+                        <span class="order-status">${order.status}</span>  <!-- 订单状态（红色） -->
                     </div>
-                    <!-- 订单商品缩略图 -->
+                    <!-- 订单商品缩略图（横向排列） -->
                     <div class="order-products">
                         ${order.items.map(item => `
                             <div class="order-product-img" title="${item.name}">
@@ -334,79 +335,83 @@
 
         // =============================================
         // 左侧菜单切换交互
-        // 实现方式：querySelectorAll().forEach() 绑定点击 + classList.add/remove('active') 切换面板
-        // 实现原理：每个菜单项通过 data-panel 属性存储面板名称，
-        //           点击时先移除所有菜单和面板的 active 类，再为目标菜单和面板添加 active 类。
-        //           切换到收藏面板时特殊处理：调用 renderFavoriteList('favorite-list') 动态渲染。
-        //           URL 参数支持：通过 URLSearchParams 解析 ?tab=xxx 参数，
-        //           自动触发对应菜单项的 click 事件，实现外部链接直达指定面板。
+        // 【答辩要点】菜单项通过 data-panel 属性关联右侧面板 ID。
+        // 切换到收藏面板时特殊处理：调用 renderFavoriteList 动态渲染。
+        // URL 参数支持：?tab=orders 自动切换到指定面板。
         // =============================================
         document.querySelectorAll('.profile-menu-item').forEach(item => {
             item.addEventListener('click', () => {
-                const panelId = item.dataset.panel;
+                const panelId = item.dataset.panel;  // 读取 data-panel 属性
                 
-                // 切换菜单高亮
+                // 切换菜单高亮（先清除所有，再激活当前）
                 document.querySelectorAll('.profile-menu-item').forEach(i => i.classList.remove('active'));
                 item.classList.add('active');
                 
-                // 切换内容面板显示
+                // 切换内容面板（先清除所有，再激活目标）
                 document.querySelectorAll('.profile-panel').forEach(p => p.classList.remove('active'));
                 document.getElementById('panel-' + panelId).classList.add('active');
                 
                 // 【新功能】切换到收藏面板时加载收藏列表
                 if (panelId === 'favorites') {
-                    renderFavoriteList('favorite-list');
+                    renderFavoriteList('favorite-list');  // 调用全局函数渲染收藏
                 }
             });
         });
         
-        // URL 参数自动切换面板（如 profile.html?tab=orders）
+        // ★ URL 参数自动切换面板
+        // 例如：profile.html?tab=orders → 自动切换到"我的订单"面板
         const urlParams = new URLSearchParams(window.location.search);
         const tabParam = urlParams.get('tab');
         if (tabParam) {
             const menuItem = document.querySelector(`[data-panel="${tabParam}"]`);
-            if (menuItem) menuItem.click();
+            if (menuItem) menuItem.click();  // 模拟点击菜单项
         }
         
         /**
          * 保存收货地址到 LocalStorage
-         * 实现方式：localStorage.setItem() + JSON.stringify() 持久化地址数据
+         * 【答辩要点】先验证表单（姓名/手机号正则/地址），再保存。
+         * 存储键名：shop_addr_{用户ID}
          */
         function saveAddress() {
             const name = document.getElementById('addr-name').value.trim();
             const phone = document.getElementById('addr-phone').value.trim();
             const address = document.getElementById('addr-detail').value.trim();
             
-            // 表单验证
+            // === 表单验证 ===
             if (!name) { showToast('请输入收货人姓名', 'error'); return; }
-            if (!phone || !/^1[3-9]\d{9}$/.test(phone)) { showToast('请输入正确的手机号', 'error'); return; }
+            // 正则验证手机号：1开头，第二位3-9，后面9位数字
+            if (!phone || !/^1[3-9]\d{9}$/.test(phone)) { 
+                showToast('请输入正确的手机号', 'error'); return; 
+            }
             if (!address) { showToast('请输入详细地址', 'error'); return; }
             
-            localStorage.setItem(`shop_addr_${AppState.currentUser.id}`, JSON.stringify({ name, phone, address }));
+            // === 保存到 LocalStorage ===
+            // JSON.stringify 将对象序列化为字符串
+            localStorage.setItem(
+                `shop_addr_${AppState.currentUser.id}`,  // 用户专属 key
+                JSON.stringify({ name, phone, address })  // 对象简写
+            );
             showToast('地址保存成功', 'success');
         }
         
         /**
          * 修改密码
-         * 验证原密码正确性后更新为新密码
-         * 实现方式：Array.findIndex() 定位用户 + localStorage.setItem() 更新密码
-         * 实现原理：先从 LocalStorage 读取所有用户数组，用 findIndex() 根据当前用户 ID 
-         *           找到用户索引。验证原密码与存储的密码是否一致（模拟后端密码验证）。
-         *           验证通过后直接修改数组中该用户的 password 属性，
-         *           再将整个数组 JSON.stringify 写回 LocalStorage。
-         *           最后清空所有密码输入框，防止密码残留。
-         *           注意：实际项目中密码绝不能明文存储，此处仅为课程设计演示。
+         * 【答辩要点】三步验证：
+         *   1. 原密码是否正确（与 LocalStorage 中存储的密码比对）
+         *   2. 新密码格式是否正确（正则验证）
+         *   3. 两次输入是否一致
+         * 注意：实际项目密码绝不能明文存储，此处仅为课程设计演示。
          */
         function changePassword() {
             const oldPwd = document.getElementById('settings-old-pwd').value.trim();
             const newPwd = document.getElementById('settings-new-pwd').value.trim();
             const confirmPwd = document.getElementById('settings-confirm-pwd').value.trim();
             
-            // 表单验证
+            // === 表单验证 ===
             if (!oldPwd) { showToast('请输入原密码', 'error'); return; }
             if (!newPwd) { showToast('请输入新密码', 'error'); return; }
             
-            // 密码格式验证（6-20位，包含字母和数字）
+            // 密码格式验证（与注册时相同）
             const pwdRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{6,20}$/;
             if (!pwdRegex.test(newPwd)) {
                 showToast('新密码格式不正确（6-20位，含字母和数字）', 'error');
@@ -417,27 +422,29 @@
                 return;
             }
             
-            // 从 LocalStorage 查找用户并验证原密码
+            // === 验证原密码并更新 ===
             const users = JSON.parse(localStorage.getItem('shop_users') || '[]');
+            // findIndex：查找用户索引（与 find 类似，但返回索引而非元素）
             const userIndex = users.findIndex(u => u.id === AppState.currentUser.id);
             
+            // 验证原密码是否正确
             if (userIndex === -1 || users[userIndex].password !== oldPwd) {
                 showToast('原密码错误', 'error');
                 return;
             }
             
-            // 更新密码
+            // 更新密码并写回 LocalStorage
             users[userIndex].password = newPwd;
             localStorage.setItem('shop_users', JSON.stringify(users));
             showToast('密码修改成功', 'success');
             
-            // 清空密码输入框
+            // 清空密码输入框（安全考虑：防止密码残留）
             document.getElementById('settings-old-pwd').value = '';
             document.getElementById('settings-new-pwd').value = '';
             document.getElementById('settings-confirm-pwd').value = '';
         }
         
-        // 页面加载完成后渲染
+        // ★ 页面加载完成后渲染
         document.addEventListener('DOMContentLoaded', renderProfile);
     </script>
 </body>

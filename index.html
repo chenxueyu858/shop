@@ -1,83 +1,90 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>优选商城 - 品质生活，尽在优选</title>
-    <link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">  <!-- 字符编码：支持中文 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  <!-- 移动端视口适配 -->
+    <title>优选商城 - 品质生活，尽在优选</title>  <!-- 页面标题（显示在浏览器标签页上） -->
+    <link rel="stylesheet" href="css/style.css">  <!-- 引入全局样式表 -->
 </head>
 <body>
     <!-- =============================================
-         顶部信息栏
-         显示欢迎语、登录/注册、购物车入口
-         实现方式：HTML + CSS 静态布局，JS 通过 updateUserUI() 动态控制显示
-         实现原理：.top-bar 是深色背景的导航条，内部 .container 使用 Flexbox 水平排列。
-                  JS 根据登录状态（AppState.currentUser）切换元素的 display 属性：
-                  未登录时显示"登录/注册"链接，已登录时显示用户名和退出按钮。
-                  .badge 角标使用 position:absolute 定位在"购物车"文字右上角。
+         顶部信息栏（Top Bar）
+         【答辩要点】深色背景的功能导航条。
+         包含：欢迎语、我的订单、客户服务 | 登录/注册、用户名、退出、购物车
+         通过 JS 的 updateUserUI() 函数根据登录状态动态切换显示。
+         未登录：显示"登录""注册"链接
+         已登录：显示用户名 + 退出按钮
          ============================================= -->
     <div class="top-bar">
         <div class="container">
+            <!-- 左侧：欢迎语 + 快捷链接 -->
             <div class="left-links">
-                <a href="index.html">优选商城欢迎您！</a>
+                <a href="index.html">优选商城欢迎您！</a>  <!-- 点击回到首页 -->
                 <a href="#">我的订单</a>
                 <a href="#">客户服务</a>
             </div>
+            <!-- 右侧：用户状态区 -->
             <div class="right-links">
-                <a href="login.html" class="login-link">登录</a>
-                <a href="login.html#register" class="login-link">注册</a>
-                <span class="user-info" style="display:none;"></span>
-                <button class="btn-logout" style="display:none;" onclick="logout()">退出</button>
+                <!-- 未登录时显示 -->
+                <a href="login.html" class="login-link">登录</a>          <!-- 跳转登录页 -->
+                <a href="login.html#register" class="login-link">注册</a> <!-- 跳转注册（#register 自动切换标签） -->
+                <!-- 已登录时显示（默认隐藏，JS 控制） -->
+                <span class="user-info" style="display:none;"></span>    <!-- 显示用户名 -->
+                <button class="btn-logout" style="display:none;" onclick="logout()">退出</button>  <!-- 退出登录 -->
+                <!-- 购物车入口（始终显示） -->
                 <a href="cart.html" style="position:relative;">
-                    购物车 <span id="cart-badge" class="badge" style="display:none;">0</span>
+                    购物车 <span id="cart-badge" class="badge" style="display:none;">0</span>  <!-- 红色角标 -->
                 </a>
             </div>
         </div>
     </div>
 
     <!-- =============================================
-         主头部
-         Logo + 搜索框(带历史记录) + 个人中心/购物车
-         实现方式：HTML 静态结构 + initSearch() 绑定搜索事件 + updateCartBadge() 更新角标
-         实现原理：.main-header 使用 position: sticky 固定在视口顶部，滚动时不消失。
-                  Logo 区域由图标（渐变方块）和文字组成。
-                  搜索框是 input + button 组合，红色边框突出显示。
-                  搜索历史面板是绝对定位在搜索框下方的隐藏 div，
-                  通过 CSS 类 .show 控制显示，input 聚焦时 JS 触发显示。
+         主头部（Main Header）
+         【答辩要点】position: sticky 粘性定位，滚动时固定在顶部。
+         三部分：Logo（品牌标识） + 搜索框（核心功能） + 操作区（个人中心/购物车）
+         搜索框包含历史记录下拉面板（position: absolute 定位）。
          ============================================= -->
     <header class="main-header">
         <div class="container">
-            <!-- 品牌 Logo -->
+            <!-- 品牌 Logo：图标（渐变方块）+ 文字 -->
             <a href="index.html" class="logo">
-                <div class="logo-icon">U</div>
-                <div class="logo-text">优选<span>商城</span></div>
+                <div class="logo-icon">U</div>  <!-- 渐变红色方块 -->
+                <div class="logo-text">优选<span>商城</span></div>  <!-- "商城"红色 -->
             </a>
             
-            <!-- 搜索框区域（含搜索历史下拉面板） -->
+            <!-- 搜索框区域：input + button 组合 -->
+            <!-- position:relative 为搜索历史面板提供定位参考 -->
             <div class="search-box" style="position:relative;">
+                <!-- 搜索输入框：聚焦时显示搜索历史 -->
                 <input type="text" id="search-input" placeholder="搜索商品、品牌、分类..." 
-                       onfocus="showSearchHistory()" onblur="setTimeout(hideSearchHistory, 200)">
-                <button id="search-btn">🔍 搜索</button>
-                <!-- 搜索历史下拉面板 -->
+                       onfocus="showSearchHistory()"                        <!-- 聚焦时显示历史 -->
+                       onblur="setTimeout(hideSearchHistory, 200)">          <!-- 失焦时延迟隐藏（给点击历史项留时间） -->
+                <button id="search-btn">🔍 搜索</button>  <!-- 搜索按钮（JS 绑定 click 和 Enter 事件） -->
+                
+                <!-- 【新功能】搜索历史下拉面板 -->
                 <div class="search-history-panel" id="search-history-panel">
                     <div class="history-header">
                         <span>搜索历史</span>
                         <button class="clear-btn" onclick="clearSearchHistory(); showSearchHistory();">清空</button>
+                        <!-- 清空按钮：先清空历史，再重新渲染面板 -->
                     </div>
-                    <div id="history-list"></div>
+                    <div id="history-list"></div>  <!-- 历史列表（JS 动态生成） -->
                 </div>
             </div>
             
-            <!-- 头部操作区 -->
+            <!-- 头部操作区：个人中心 + 购物车 -->
             <div class="header-actions">
+                <!-- 个人中心入口 -->
                 <a href="profile.html" class="header-action-item">
-                    <span class="icon">👤</span>
-                    <span class="label">个人中心</span>
+                    <span class="icon">👤</span>    <!-- 图标 -->
+                    <span class="label">个人中心</span>  <!-- 文字 -->
                 </a>
+                <!-- 购物车入口（带角标） -->
                 <a href="cart.html" class="header-action-item">
                     <span class="icon">🛒</span>
                     <span class="label">购物车</span>
-                    <span id="cart-badge" class="badge" style="display:none;">0</span>
+                    <span id="cart-badge" class="badge" style="display:none;">0</span>  <!-- 第二个角标 -->
                 </a>
             </div>
         </div>
@@ -85,15 +92,15 @@
 
 
     <!-- =============================================
-         轮播图（已隐藏，代码保留备用）
-         实现方式：initBanner() 控制轮播逻辑 + setInterval() 自动切换
-         实现原理：所有 .banner-slide 使用 position:absolute 堆叠在同一容器中，
-                  只有带 .active 类的 slide 的 opacity 为 1（可见），其余为 0（隐藏）。
-                  CSS transition 实现淡入淡出。JS 通过 setInterval 每 4 秒切换 active 类。
-                  左右箭头和底部圆点绑定点击事件，支持手动切换。
+         轮播图（Banner）- 已隐藏，代码保留备用
+         【答辩要点】3张轮播图，使用 opacity 淡入淡出切换。
+         JS 的 initBanner() 控制自动播放（每4秒切换）。
+         支持手动点击左右箭头和底部指示器。
+         目前通过 CSS display:none 隐藏，可随时启用。
          ============================================= -->
     <section class="banner-section">
         <div class="banner-container">
+            <!-- 第1张：618大促（默认显示） -->
             <div class="banner-slide active">
                 <div class="banner-bg" style="background: linear-gradient(135deg, #ff6b6b, #e4393c);"></div>
                 <div class="banner-content">
@@ -102,6 +109,7 @@
                     <a href="javascript:void(0)" class="btn-banner" onclick="filterByCategory('全部')">立即抢购</a>
                 </div>
             </div>
+            <!-- 第2张：数码焕新 -->
             <div class="banner-slide">
                 <div class="banner-bg" style="background: linear-gradient(135deg, #667eea, #764ba2);"></div>
                 <div class="banner-content">
@@ -110,6 +118,7 @@
                     <a href="javascript:void(0)" class="btn-banner" onclick="filterByCategory('手机数码')">去逛逛</a>
                 </div>
             </div>
+            <!-- 第3张：运动风尚 -->
             <div class="banner-slide">
                 <div class="banner-bg" style="background: linear-gradient(135deg, #11998e, #38ef7d);"></div>
                 <div class="banner-content">
@@ -118,28 +127,28 @@
                     <a href="javascript:void(0)" class="btn-banner" onclick="filterByCategory('运动鞋服')">立即选购</a>
                 </div>
             </div>
+            <!-- 左右切换箭头 -->
             <button class="banner-btn prev">❮</button>
             <button class="banner-btn next">❯</button>
+            <!-- 底部指示器圆点 -->
             <div class="banner-dots">
-                <span class="dot active"></span>
-                <span class="dot"></span>
-                <span class="dot"></span>
+                <span class="dot active"></span>  <!-- 第1个激活 -->
+                <span class="dot"></span>         <!-- 第2个 -->
+                <span class="dot"></span>         <!-- 第3个 -->
             </div>
         </div>
     </section>
 
     <!-- =============================================
          主内容区域
-         快捷入口 + 排序栏 + 商品列表
-         实现方式：renderProducts() 动态渲染商品卡片 + filterByCategory() 分类筛选 + setSortType() 排序
-         实现原理：快捷入口使用 CSS Grid 5 列布局，每个入口绑定 onclick 调用 filterByCategory()。
-                  排序栏使用 Flexbox 水平排列按钮，按钮通过 data-sort 属性标识排序类型。
-                  JS 根据当前排序类型为对应按钮添加 .active 类（红色高亮）。
-                  商品网格 #product-grid 是空的占位容器，由 JS 的 renderProducts() 
-                  通过 innerHTML 动态注入商品卡片 HTML，实现数据驱动视图。
+         【答辩要点】首页的核心内容区。
+         结构：快捷入口（5分类图标）→ 区块标题 → 排序栏 → 商品网格
+         商品网格通过 JS 的 renderProducts() 动态渲染。
+         排序栏通过 JS 的 setSortType() 处理。
          ============================================= -->
     <main class="main-content">
-        <!-- 快捷入口 - 5个分类图标，点击可快速筛选 -->
+        <!-- 快捷入口：5个分类图标，Grid 5列布局 -->
+        <!-- 点击调用 filterByCategory() 按分类筛选商品 -->
         <div class="quick-entry">
             <div class="quick-entry-item" onclick="filterByCategory('手机数码')">
                 <div class="entry-icon">📱</div>
@@ -165,13 +174,14 @@
 
         <!-- 商品列表区域 -->
         <div class="container">
-            <!-- 区块标题 -->
+            <!-- 区块标题：左侧彩色竖条 + 标题文字 + 右侧"查看更多" -->
             <div class="section-header">
-                <h2 class="section-title">热门推荐</h2>
+                <h2 class="section-title">热门推荐</h2>  <!-- ::before 伪元素生成红色竖条 -->
                 <a href="javascript:void(0)" class="section-more" onclick="filterByCategory('全部')">查看更多 →</a>
             </div>
 
-            <!-- 【新功能】商品排序栏 - 支持按价格/销量/评分排序 -->
+            <!-- 【新功能】商品排序栏 -->
+            <!-- data-sort 属性存储排序类型，JS 通过 dataset.sort 读取 -->
             <div class="sort-bar">
                 <span class="sort-label">排序：</span>
                 <button class="sort-btn active" data-sort="default" onclick="setSortType('default')">默认</button>
@@ -181,19 +191,22 @@
                 <button class="sort-btn" data-sort="rating" onclick="setSortType('rating')">评分优先</button>
             </div>
 
-            <!-- 商品网格 - 动态渲染 -->
+            <!-- 商品网格容器：JS 通过 innerHTML 动态填充 -->
             <div class="product-grid" id="product-grid">
-                <!-- JavaScript 动态渲染 -->
+                <!-- renderProducts() 动态渲染商品卡片 -->
             </div>
         </div>
     </main>
 
     <!-- =============================================
-         页脚
-         4列网格布局，包含购物指南、配送、支付、售后
+         页脚（Footer）
+         【答辩要点】深色背景，4列 Grid 布局。
+         包含：购物指南、配送方式、支付方式、售后服务。
+         底部版权信息显示学号和姓名。
          ============================================= -->
     <footer class="site-footer">
         <div class="container">
+            <!-- 4列网格布局 -->
             <div class="footer-grid">
                 <div class="footer-col">
                     <h4>购物指南</h4>
@@ -224,101 +237,104 @@
                     <a href="#">投诉建议</a>
                 </div>
             </div>
+            <!-- 底部版权 -->
             <div class="footer-bottom">
                 <p>© 2026 优选商城 | 24215220120_陈学羽_大作业 | Web编程技术课程设计</p>
             </div>
         </div>
     </footer>
 
-    <!-- 引入核心 JS 文件 -->
-    <script src="js/app.js"></script>
+    <!-- =============================================
+         引入 JS 文件
+         【答辩要点】先引入核心库 app.js（全局函数和状态），
+         再编写首页专属的内联脚本。
+         ============================================= -->
+    <script src="js/app.js"></script>  <!-- 核心逻辑（AppState、购物车、搜索等） -->
     <script>
         // =============================================
         // 首页专属脚本
-        // 函数: showSearchHistory()、hideSearchHistory()、useHistory()
-        // 实现方式：initBanner() 启动轮播 + sessionStorage 跨页面传参
-        // 实现原理：DOMContentLoaded 事件在 DOM 构建完成后触发，此时可以安全操作 DOM。
-        //           initBanner() 启动轮播定时器，sessionStorage 读取从其他页面传来的分类参数。
-        //           sessionStorage 是会话级存储，关闭浏览器标签页后自动清除，
-        //           适合跨页面传递临时参数（与 localStorage 不同，后者持久化存储）。
+        // 【答辩要点】本脚本块负责首页特有的功能：
+        //   1. 轮播图初始化（initBanner）
+        //   2. 搜索历史面板交互
+        //   3. 跨页面分类参数恢复（sessionStorage）
         // =============================================
         
         /**
-         * 页面加载完成后初始化轮播图
-         * 以及恢复跨页面传递的分类筛选
-         * 实现方式：addEventListener('DOMContentLoaded') 监听加载完成事件
-         * 实现原理：sessionStorage.getItem() 读取分类参数，读取后立即 removeItem() 清除，
-         *           防止刷新页面时重复应用筛选。然后调用 filterByCategory() 应用分类筛选。
+         * 页面加载完成后初始化
+         * 【答辩要点】DOMContentLoaded 事件在 HTML 解析完成后触发。
+         * initBanner() 启动轮播定时器。
+         * sessionStorage 读取从其他页面传来的分类参数。
+         * sessionStorage 与 localStorage 的区别：
+         *   - sessionStorage：关闭标签页后清除（临时数据）
+         *   - localStorage：永久保存（持久化数据）
          */
         document.addEventListener('DOMContentLoaded', () => {
-            initBanner();
+            initBanner();  // 启动轮播图自动播放
             
-            // 如果从其他页面传入了分类参数，自动应用筛选
+            // 跨页面分类参数恢复
+            // 例如：从商品详情页点击"去逛逛"跳转到首页时，自动筛选对应分类
             const savedCategory = sessionStorage.getItem('shop_category');
             if (savedCategory) {
-                sessionStorage.removeItem('shop_category');
-                filterByCategory(savedCategory);
+                sessionStorage.removeItem('shop_category');  // 读取后立即清除（防止刷新重复应用）
+                filterByCategory(savedCategory);             // 应用分类筛选
             }
         });
 
         // =============================================
         // 【新功能】搜索历史面板交互
-        // 实现方式：classList.add/remove('show') 控制下拉面板显隐
-        // 实现原理：搜索历史面板使用 CSS position:absolute 定位在搜索框正下方，
-        //           默认 display:none 隐藏，添加 .show 类后 display:block 显示。
-        //           面板中的历史项通过 map() 遍历 AppState.searchHistory 数组动态生成。
-        //           点击历史项时，将关键词填入搜索框并触发搜索按钮的 click 事件。
-        //           使用 onmousedown + preventDefault 替代 onclick，防止 blur 事件
-        //           先于 click 触发导致面板提前关闭。
+        // 【答辩要点】搜索历史面板使用 position:absolute 定位在搜索框下方。
+        // 通过 .show 类控制显隐（display:none ↔ display:block）。
+        // 使用 onmousedown + preventDefault 防止 blur 先于 click 触发。
         // =============================================
         
         /**
          * 显示搜索历史下拉面板
-         * 实现方式：Array.map().join('') 动态渲染历史列表 HTML
-         * 实现原理：先检查 AppState.searchHistory 是否为空，空则不显示。
-         *           map() 遍历历史数组，为每个关键词生成一个 .history-item div，
-         *           通过 innerHTML 注入面板。关键词中的单引号用 replace(/'/g, "\\'") 转义，
-         *           防止破坏 onclick 属性中的字符串。
+         * 【答辩要点】动态渲染历史列表，空历史时不显示。
+         * 关键词中的单引号需要转义（replace），防止破坏 onclick 属性字符串。
          */
         function showSearchHistory() {
-            const panel = document.getElementById('search-history-panel');
-            const list = document.getElementById('history-list');
+            const panel = document.getElementById('search-history-panel');  // 面板容器
+            const list = document.getElementById('history-list');            // 列表容器
             
-            // 无历史记录时不显示
+            // 无历史记录时不显示面板
             if (AppState.searchHistory.length === 0) {
-                panel.classList.remove('show');
+                panel.classList.remove('show');  // 隐藏
                 return;
             }
             
-            // 渲染历史列表
+            // 渲染历史列表：map() 遍历 → 生成 HTML → join() 拼接 → innerHTML 写入
             list.innerHTML = AppState.searchHistory.map(kw => `
                 <div class="history-item" onmousedown="event.preventDefault(); useHistory('${kw.replace(/'/g, "\\'")}')">
+                    <!-- onmousedown + preventDefault：防止 blur 先触发导致面板关闭 -->
+                    <!-- replace(/'/g, "\\'")：转义单引号 -->
                     <span class="history-icon">🕐</span>
                     <span>${kw}</span>
                 </div>
             `).join('');
             
-            panel.classList.add('show');
+            panel.classList.add('show');  // 显示面板
         }
         
         /**
          * 隐藏搜索历史面板
-         * 实现方式：classList.remove('show') 隐藏面板
+         * 【答辩要点】延迟 200ms 隐藏，给点击历史项留出响应时间。
+         * 如果在 onclick 中直接隐藏，blur 事件可能先触发导致点击无效。
          */
         function hideSearchHistory() {
             const panel = document.getElementById('search-history-panel');
-            panel.classList.remove('show');
+            panel.classList.remove('show');  // 移除 .show 类 → display:none
         }
         
         /**
-         * 点击历史记录项，填入搜索框并执行搜索
+         * 点击历史记录项：填入搜索框并执行搜索
          * @param {string} keyword - 搜索关键词
-         * 实现方式：input.value 赋值 + button.click() 模拟点击触发搜索
+         * 【答辩要点】两步操作：填入输入框 → 模拟点击搜索按钮。
+         * button.click() 触发按钮上绑定的 click 事件处理器。
          */
         function useHistory(keyword) {
-            document.getElementById('search-input').value = keyword;
-            document.getElementById('search-btn').click();
-            hideSearchHistory();
+            document.getElementById('search-input').value = keyword;  // 填入关键词
+            document.getElementById('search-btn').click();            // 触发搜索
+            hideSearchHistory();  // 关闭面板
         }
     </script>
 </body>

@@ -8,7 +8,8 @@
 </head>
 <body>
     <!-- =============================================
-         顶部信息栏 + 主头部 + 分类导航（与首页共用）
+         顶部信息栏 + 主头部（与首页共用样式）
+         【答辩要点】所有页面共享相同的头部结构，保证一致的导航体验。
          ============================================= -->
     <div class="top-bar">
         <div class="container">
@@ -53,41 +54,45 @@
 
     <!-- =============================================
          购物车内容区域
-         支持空状态、登录提示、商品列表三种显示
-         实现方式：renderCart() 根据 AppState 状态动态切换显示内容
-         实现原理：购物车有三种显示状态，通过 style.display 控制显隐：
-                  状态1（未登录）：显示 🔒 图标 + "请先登录" + 去登录按钮
-                  状态2（空购物车）：显示 🛒 图标 + "去购物" 按钮
-                  状态3（有商品）：显示商品表格 + 底部结算栏
-                  商品表格使用 Grid 布局模拟表格式结构，表头和行共享相同的列定义。
-                  结算栏包含全选复选框、已选数量/总价汇总、结算按钮。
+         【答辩要点】购物车有三种显示状态：
+         状态1（未登录）：🔒 图标 + "请先登录" + 去登录按钮
+         状态2（空购物车）：🛒 图标 + "购物车空" + 去购物按钮
+         状态3（有商品）：商品表格 + 底部结算栏
+         
+         商品表格使用 Grid 6列布局：
+         复选框(50px) | 商品信息(弹性) | 单价(120px) | 数量(140px) | 小计(140px) | 操作(100px)
+         
+         结算栏包含：全选复选框 + 已选数量/总价 + 结算按钮
+         
+         数据流：操作 → AppState.cart 变化 → saveCartToStorage() → renderCart() 重新渲染
          ============================================= -->
     <main class="main-content">
         <div class="container">
             <div class="cart-page">
                 <h2 style="font-size:24px;font-weight:700;margin-bottom:24px;">我的购物车</h2>
                 
-                <!-- 状态1：未登录提示 -->
+                <!-- 状态1/2：空购物车/未登录提示（共用容器） -->
                 <div class="cart-empty" id="cart-empty" style="display:none;">
                     <div class="empty-icon">🛒</div>
                     <p>购物车还是空的，快去挑选心仪的商品吧！</p>
                     <a href="index.html" class="btn-go-shopping">去购物</a>
                 </div>
 
-                <!-- 状态2：购物车商品列表 -->
+                <!-- 状态3：购物车商品列表 -->
                 <div id="cart-content">
                     <!-- 购物车表格 -->
                     <div class="cart-table" id="cart-table">
-                        <!-- 表头 -->
+                        <!-- 表头：6列 Grid 布局 -->
+                        <!-- grid-template-columns: 50px 1fr 120px 140px 140px 100px -->
                         <div class="cart-table-header">
-                            <span></span>
-                            <span>商品信息</span>
-                            <span>单价</span>
-                            <span>数量</span>
-                            <span>小计</span>
-                            <span>操作</span>
+                            <span></span>        <!-- 复选框列（空标题） -->
+                            <span>商品信息</span>  <!-- 商品图片+名称 -->
+                            <span>单价</span>      <!-- 单价 -->
+                            <span>数量</span>      <!-- 数量选择器 -->
+                            <span>小计</span>      <!-- 单价×数量 -->
+                            <span>操作</span>      <!-- 删除按钮 -->
                         </div>
-                        <!-- 商品列表（动态渲染） -->
+                        <!-- 商品列表：JS 动态渲染 -->
                         <div id="cart-items"></div>
                     </div>
 
@@ -96,6 +101,7 @@
                         <!-- 全选复选框 -->
                         <div class="select-all">
                             <input type="checkbox" id="select-all" onchange="handleSelectAll(this.checked)">
+                            <!-- this.checked：复选框当前选中状态（true/false） -->
                             <label for="select-all">全选</label>
                         </div>
                         <!-- 结算信息 -->
@@ -141,138 +147,153 @@
     <script>
         // =============================================
         // 购物车页专属脚本
-        // 函数: renderCart()、updateCartSummary()、handleItemCheck()、
-        //       handleSelectAll()、changeItemQty()、changeItemQtyInput()、
-        //       handleDelete()、goCheckout()
-        // 实现方式：Array.map().join('') 动态渲染表格行 + Array.filter()/reduce() 计算汇总
-        // 实现原理：购物车页面是典型的"数据驱动视图"模式——所有 UI 由 AppState.cart 数组决定。
-        //           renderCart() 负责完整的视图更新：先判断登录/空状态，
-        //           再通过 map() 遍历 cart 数组生成每一行的 HTML。
-        //           每次操作（增删改查）后都调用 renderCart() 重新渲染整个列表，
-        //           这是简化版的"全量更新"策略，适合数据量较小的场景。
-        //           状态管理：选中状态存储在 item.checked 中，全选时遍历所有项设置。
+        // 【答辩要点】购物车是"数据驱动视图"的典型应用。
+        // 核心设计模式：
+        //   操作 → 修改 AppState.cart → saveCartToStorage() → renderCart() 全量重渲染
+        // 
+        // 这是简化版的"全量更新"策略：
+        //   优点：逻辑简单，不易出错，状态一致性好
+        //   缺点：数据量大时性能较差（本项目数据量小，可接受）
+        // 
+        // 关键函数：
+        //   - renderCart()：根据状态渲染购物车（三态切换）
+        //   - updateCartSummary()：更新底部结算信息
+        //   - handleItemCheck()：单选/取消
+        //   - handleSelectAll()：全选/取消全选
+        //   - changeItemQty()：修改数量
+        //   - handleDelete()：删除商品
+        //   - goCheckout()：跳转结算页
         // =============================================
 
         /**
          * 渲染购物车内容
-         * 根据登录状态和购物车是否为空显示不同界面
-         * 实现方式：innerHTML 替换内容 + style.display 控制三种状态切换
-         * 实现原理：三种状态通过 if-else 分支判断：先检查登录，再检查购物车是否为空。
-         *           商品列表渲染使用模板字符串 + map().join() 模式：
-         *           每行包含复选框、商品图片+名称、单价、数量选择器、小计、删除按钮。
-         *           复选框的 checked 属性绑定 item.checked，onchange 事件触发状态切换。
-         *           数量输入框直接显示 item.quantity，修改时调用 updateCartQuantity。
+         * 【答辩要点】三种状态的判断和渲染：
+         *   1. 未登录 → 登录提示
+         *   2. 购物车空 → 空状态
+         *   3. 有商品 → 表格 + 结算栏
+         * 
+         * 商品行使用模板字符串 + map().join() 生成 HTML。
+         * 每行包含：复选框 | 商品图片+名称 | 单价 | 数量选择器 | 小计 | 删除按钮
          */
         function renderCart() {
-            const cartItemsEl = document.getElementById('cart-items');
-            const cartEmptyEl = document.getElementById('cart-empty');
-            const cartFooterEl = document.getElementById('cart-footer');
+            const cartItemsEl = document.getElementById('cart-items');    // 商品列表容器
+            const cartEmptyEl = document.getElementById('cart-empty');    // 空状态容器
+            const cartFooterEl = document.getElementById('cart-footer');  // 结算栏
             
-            // 未登录：显示登录提示
+            // === 状态1：未登录 ===
             if (!AppState.currentUser) {
-                cartEmptyEl.style.display = '';
+                cartEmptyEl.style.display = '';  // 显示空状态区
                 cartEmptyEl.innerHTML = `
                     <div class="empty-icon">🔒</div>
                     <p>请先登录后查看购物车</p>
                     <a href="login.html" class="btn-go-shopping">去登录</a>
                 `;
-                document.getElementById('cart-content').style.display = 'none';
+                document.getElementById('cart-content').style.display = 'none';  // 隐藏商品列表
                 return;
             }
             
-            // 购物车为空：显示空状态
+            // === 状态2：购物车为空 ===
             if (AppState.cart.length === 0) {
-                cartEmptyEl.style.display = '';
+                cartEmptyEl.style.display = '';  // 显示空状态（保持默认 HTML 内容）
                 document.getElementById('cart-content').style.display = 'none';
                 return;
             }
             
-            // 有商品：渲染商品列表
-            cartEmptyEl.style.display = 'none';
-            document.getElementById('cart-content').style.display = '';
+            // === 状态3：有商品 → 渲染列表 ===
+            cartEmptyEl.style.display = 'none';          // 隐藏空状态
+            document.getElementById('cart-content').style.display = '';  // 显示商品列表
             
-            // 使用 map 生成每行购物车项的 HTML
+            // ★ 核心渲染：map() 遍历购物车 → 模板字符串生成 HTML → join() 拼接 → innerHTML
             cartItemsEl.innerHTML = AppState.cart.map(item => `
                 <div class="cart-item">
-                    <!-- 选中复选框 -->
+                    <!-- 1. 复选框：绑定 item.checked 状态 -->
                     <div class="item-checkbox">
-                        <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="handleItemCheck(${item.productId})">
+                        <!-- ${item.checked ? 'checked' : ''}：动态设置复选框状态 -->
+                        <input type="checkbox" ${item.checked ? 'checked' : ''} 
+                               onchange="handleItemCheck(${item.productId})">
                     </div>
-                    <!-- 商品图片 + 名称 -->
+                    <!-- 2. 商品信息：点击跳转详情页 -->
                     <div class="item-product" onclick="viewProductDetail(${item.productId})" style="cursor:pointer;">
                         <div class="item-image">
-                            <img src="${item.image}" alt="${item.name}" onerror="this.parentElement.innerHTML='<div style=display:flex;align-items:center;justify-content:center;color:#999;font-size:32px;>📦</div>'">
+                            <img src="${item.image}" alt="${item.name}" 
+                                 onerror="this.parentElement.innerHTML='<div style=...>📦</div>'">
                         </div>
                         <div class="item-name">${item.name}</div>
                     </div>
-                    <!-- 单价 -->
+                    <!-- 3. 单价 -->
                     <div class="item-price">¥${item.price.toFixed(2)}</div>
-                    <!-- 数量选择器 -->
+                    <!-- 4. 数量选择器：减号 + 输入框 + 加号 -->
                     <div class="item-quantity">
                         <button class="qty-btn" onclick="changeItemQty(${item.productId}, -1)">−</button>
-                        <input type="number" class="qty-input" value="${item.quantity}" min="1" max="99" style="width:50px;" onchange="changeItemQtyInput(${item.productId}, this.value)">
+                        <input type="number" class="qty-input" value="${item.quantity}" 
+                               min="1" max="99" style="width:50px;" 
+                               onchange="changeItemQtyInput(${item.productId}, this.value)">
                         <button class="qty-btn" onclick="changeItemQty(${item.productId}, 1)">+</button>
                     </div>
-                    <!-- 小计 = 单价 × 数量 -->
+                    <!-- 5. 小计：单价 × 数量 -->
                     <div class="item-total">¥${(item.price * item.quantity).toFixed(2)}</div>
-                    <!-- 删除按钮 -->
+                    <!-- 6. 删除按钮 -->
                     <button class="btn-delete" onclick="handleDelete(${item.productId})">删除</button>
                 </div>
             `).join('');
             
-            // 显示结算栏
+            // 显示结算栏并更新汇总信息
             cartFooterEl.style.display = '';
             updateCartSummary();
         }
         
         /**
          * 更新购物车底部结算信息
-         * 实现方式：Array.filter() 筛选选中商品 + Array.reduce() 计算总数/总金额
-         * 实现原理：filter() 筛选出 checked 为 true 的商品（即用户勾选的商品），
-         *           reduce() 累加这些商品的数量得到"已选件数"。
-         *           总金额通过 getCartTotal() 计算（内部也是 filter + reduce）。
-         *           全选框状态：用 every() 判断是否所有商品都被选中，
-         *           全部选中则勾选全选框（实现"全选"与"全部手动勾选"的状态同步）。
+         * 【答辩要点】汇总计算三个值：
+         *   1. 已选件数：filter(checked) → reduce(累加 quantity)
+         *   2. 总金额：getCartTotal()（内部也是 filter + reduce）
+         *   3. 全选状态：every(i => i.checked)
          */
         function updateCartSummary() {
+            // filter：筛选选中的商品
             const checkedItems = AppState.cart.filter(i => i.checked);
-            // 已选商品总件数
-            document.getElementById('selected-count').textContent = checkedItems.reduce((s, i) => s + i.quantity, 0);
-            // 已选商品总金额
-            document.getElementById('total-price').textContent = '¥' + getCartTotal().toFixed(2);
-            // 全选框状态：所有商品都被选中时才勾选
-            document.getElementById('select-all').checked = AppState.cart.length > 0 && AppState.cart.every(i => i.checked);
+            // reduce：累加已选商品的总件数
+            document.getElementById('selected-count').textContent = 
+                checkedItems.reduce((s, i) => s + i.quantity, 0);
+            // 总金额
+            document.getElementById('total-price').textContent = 
+                '¥' + getCartTotal().toFixed(2);
+            // ★ 全选框状态同步：所有商品都选中 → 勾选全选框
+            // every()：所有元素满足条件返回 true，否则 false
+            document.getElementById('select-all').checked = 
+                AppState.cart.length > 0 && AppState.cart.every(i => i.checked);
         }
         
         /**
          * 单个商品复选框变化
          * @param {number} productId - 商品ID
+         * 【答辩要点】切换选中状态 → 重新渲染整个购物车。
          */
         function handleItemCheck(productId) {
-            toggleCartItemCheck(productId);
-            renderCart();
+            toggleCartItemCheck(productId);  // 切换 AppState 中的 checked
+            renderCart();                     // 重新渲染
         }
         
         /**
          * 全选/取消全选
-         * @param {boolean} checked - 选中状态
+         * @param {boolean} checked - 全选状态
          */
         function handleSelectAll(checked) {
-            toggleAllCartCheck(checked);
+            toggleAllCartCheck(checked);  // 遍历设置所有项的 checked
             renderCart();
         }
         
         /**
          * 修改商品数量（+/-按钮）
          * @param {number} productId - 商品ID
-         * @param {number} delta - 变化量
-         * 实现方式：Array.find() 定位商品 + updateCartQuantity() 更新 + renderCart() 刷新视图
+         * @param {number} delta - 变化量（+1 或 -1）
+         * 【答辩要点】先找到商品，计算新数量，调用 updateCartQuantity 更新。
          */
         function changeItemQty(productId, delta) {
             const item = AppState.cart.find(i => i.productId === productId);
             if (item) {
-                updateCartQuantity(productId, item.quantity + delta);
-                renderCart();  // 重新渲染以更新显示
+                updateCartQuantity(productId, item.quantity + delta);  // 新数量 = 原数量 + 变化量
+                renderCart();  // 重新渲染（更新小计和汇总）
             }
         }
         
@@ -282,7 +303,7 @@
          * @param {string|number} value - 输入值
          */
         function changeItemQtyInput(productId, value) {
-            const qty = parseInt(value) || 1;
+            const qty = parseInt(value) || 1;  // 转为整数，无效默认 1
             updateCartQuantity(productId, qty);
             renderCart();
         }
@@ -290,36 +311,30 @@
         /**
          * 删除购物车商品
          * @param {number} productId - 商品ID
-         * 实现方式：removeFromCart() 全局函数删除 + showToast() 提示 + renderCart() 刷新
-         * 实现原理：removeFromCart() 内部使用 filter() 创建不包含该商品的新数组，
-         *           替换 AppState.cart 后自动保存到 LocalStorage。
-         *           然后调用 renderCart() 重新渲染整个购物车页面，更新角标和汇总。
-         *           这是一种"操作 → 保存 → 重新渲染"的标准数据流。
+         * 【答辩要点】数据流：removeFromCart → showToast → renderCart
+         * removeFromCart 内部用 filter 创建不含该商品的新数组。
          */
         function handleDelete(productId) {
-            removeFromCart(productId);
+            removeFromCart(productId);  // 全局函数：filter 删除
             showToast('已从购物车移除', 'info');
-            renderCart();
+            renderCart();  // 重新渲染（如果删除后为空，自动切换到空状态）
         }
         
         /**
          * 去结算
-         * 验证有选中商品后跳转到结算页
-         * 实现方式：Array.filter() 检查选中商品 + window.location.href 跳转
-         * 实现原理：先 filter 筛选选中商品，若为空则 Toast 提示错误并 return 阻止跳转。
-         *           有选中商品则直接跳转到 checkout.html，购物车数据已存储在 AppState 
-         *           和 LocalStorage 中，结算页可直接读取，无需 URL 传参。
+         * 【答辩要点】验证有选中商品后跳转结算页。
+         * 数据已存储在 AppState 和 LocalStorage 中，结算页直接读取。
          */
         function goCheckout() {
             const checkedItems = AppState.cart.filter(i => i.checked);
             if (checkedItems.length === 0) {
-                showToast('请选择要结算的商品', 'error');
+                showToast('请选择要结算的商品', 'error');  // 无选中商品：提示错误
                 return;
             }
-            window.location.href = 'checkout.html';
+            window.location.href = 'checkout.html';  // 跳转结算页
         }
         
-        // 页面加载完成后渲染购物车
+        // ★ 页面加载完成后渲染购物车
         document.addEventListener('DOMContentLoaded', renderCart);
     </script>
 </body>

@@ -8,7 +8,8 @@
 </head>
 <body>
     <!-- =============================================
-         顶部信息栏（与首页共用样式）
+         顶部信息栏（与首页共用样式和结构）
+         【答辩要点】顶部导航栏在所有页面保持一致，提供统一的导航体验。
          ============================================= -->
     <div class="top-bar">
         <div class="container">
@@ -55,18 +56,26 @@
 
     <!-- =============================================
          商品详情区域
-         左右两栏：图片画廊 + 商品信息
-         实现方式：loadProductDetail() 读取 JSON + renderProductDetail() 动态渲染 HTML
-         实现原理：从 URL 参数中解析商品 ID（?id=1），通过 fetch 加载 products.json，
-                  用 Array.find() 匹配对应商品，再通过模板字符串动态生成详情页 HTML。
-                  图片画廊支持多图切换（缩略图点击切换主图），
-                  数量选择器通过 ± 按钮和手动输入两种方式修改购买数量。
-                  详情标签页（商品详情/规格参数）使用 active 类切换显示。
+         【答辩要点】这是"参数化页面"的典型实现：
+         同一 HTML 文件根据 URL 参数 ?id=1 展示不同商品。
+         
+         技术流程：
+         1. URLSearchParams 解析 URL 中的 id 参数
+         2. fetch() 加载 products.json
+         3. Array.find() 匹配商品
+         4. 模板字符串生成 HTML
+         5. innerHTML 渲染到页面
+         
+         页面结构：左右两栏
+         左侧：图片画廊（主图 + 缩略图列表）
+         右侧：商品信息（名称、描述、价格、元信息、数量选择器、操作按钮）
+         下方：详情标签页（商品详情 / 规格参数）
          ============================================= -->
     <main class="main-content">
         <div class="container">
+            <!-- 商品详情容器：JS 动态渲染 -->
             <div id="product-detail-container">
-                <div style="text-align:center; padding:80px; color:#999;">加载中...</div>
+                <div style="text-align:center; padding:80px; color:#999;">加载中...</div>  <!-- 加载提示 -->
             </div>
         </div>
     </main>
@@ -102,55 +111,50 @@
     <script>
         // =============================================
         // 商品详情页专属脚本
-        // 函数: goToIndex()、loadProductDetail()、renderProductDetail()、
-        //       switchImage()、switchTab()、changeQty()、validateQty()、
-        //       addToCartWithQty()、buyNow()、updateDetailFavBtn()
-        // 实现方式：URLSearchParams 读取 URL 参数 + fetch() 加载 JSON + innerHTML 动态渲染
-        // 实现原理：这是一个典型的"参数化页面"模式——同一 HTML 文件根据 URL 参数
-        //           展示不同商品的内容。URLSearchParams 是浏览器原生 API，
-        //           用于解析查询字符串（? 后面的部分），get('id') 提取参数值。
-        //           fetch 异步加载 JSON 数据，.then() 链处理响应。
-        //           模板字符串生成 HTML 后通过 innerHTML 一次性渲染到页面。
+        // 【答辩要点】详情页的核心功能：
+        //   1. URL 参数解析（?id=1）
+        //   2. 异步加载商品数据
+        //   3. 动态渲染详情页 HTML
+        //   4. 图片画廊（缩略图切换主图）
+        //   5. 数量选择器（±按钮 + 手动输入）
+        //   6. 标签页切换（商品详情/规格参数）
+        //   7. 加入购物车 / 立即购买
+        //   8. 收藏切换
         // =============================================
 
         /**
          * 跳转到首页并按分类筛选
-         * 使用 sessionStorage 跨页面传递分类信息
+         * 【答辩要点】使用 sessionStorage 跨页面传递数据。
+         * 首页的 DOMContentLoaded 事件中会读取并清除此参数。
          * @param {string} cat - 分类名称
-         * 实现方式：sessionStorage.setItem() 存储分类 + window.location.href 跳转
-         * 实现原理：sessionStorage 在浏览器标签页会话期间保持数据，
-         *           跳转到新页面后数据依然存在，适合跨页面传参。
-         *           首页的 DOMContentLoaded 事件中会读取并清除此参数。
          */
         function goToIndex(cat) {
-            sessionStorage.setItem('shop_category', cat);
-            window.location.href = 'index.html';
+            sessionStorage.setItem('shop_category', cat);  // 存储分类
+            window.location.href = 'index.html';            // 跳转首页
         }
 
         /**
          * 加载商品详情
-         * 从 URL 参数中获取商品 ID，然后从 JSON 中查找对应商品
-         * 实现方式：new URLSearchParams() 解析 URL 参数 + fetch() 异步请求 JSON
-         * 实现原理：window.location.search 获取 URL 的查询部分（如 "?id=1"），
-         *           URLSearchParams 解析为键值对，parseInt 将字符串转为数字 ID。
-         *           fetch 返回 Promise，.then(res => res.json()) 解析 JSON 响应体。
-         *           .find(p => p.id === productId) 在商品数组中按 ID 精确匹配。
-         *           匹配失败时显示"商品不存在"，网络错误时显示"加载失败"。
+         * 【答辩要点】这是参数化页面的入口函数。
+         * URLSearchParams 是浏览器原生 API，用于解析查询字符串。
+         * 例：product.html?id=1 → params.get('id') → '1'
          */
         function loadProductDetail() {
-            // 解析 URL 中的 id 参数（例如 product.html?id=1）
+            // ★ URLSearchParams：解析 URL 中的查询参数
+            // window.location.search 返回 ?id=1 部分
             const params = new URLSearchParams(window.location.search);
-            const productId = parseInt(params.get('id'));
+            const productId = parseInt(params.get('id'));  // 获取 id 参数并转为数字
             
-            // 请求商品数据 JSON 文件
+            // ★ fetch 异步请求商品数据
             fetch('data/products.json')
-                .then(res => res.json())
+                .then(res => res.json())  // 解析 JSON
                 .then(products => {
+                    // ★ Array.find()：按 ID 查找商品
                     const product = products.find(p => p.id === productId);
                     if (product) {
-                        renderProductDetail(product);
+                        renderProductDetail(product);  // 找到：渲染详情
                     } else {
-                        // 未找到商品
+                        // 未找到商品（ID 无效）
                         document.getElementById('product-detail-container').innerHTML = 
                             '<div style="text-align:center;padding:80px;color:#999;">商品不存在</div>';
                     }
@@ -165,77 +169,89 @@
         /**
          * 渲染商品详情 HTML
          * @param {Object} product - 商品数据对象
-         * 实现方式：模板字符串 `` + Array.map().join('') 动态生成详情页 HTML
-         * 实现原理：整个详情页的 HTML 结构通过模板字符串一次性生成。
-         *           product.images 数组（或回退到 [product.image]）提供多张图片，
-         *           map() 遍历生成缩略图列表，第一张默认标记 active。
-         *           规格参数表格使用 CSS 斑马纹（tr:nth-child 背景色）提升可读性。
-         *           String(id).padStart(6,'0') 将商品 ID 补零为 6 位编号。
-         *           收藏按钮通过 isFavorited() 判断显示 ❤️ 或 🤍。
+         * 【答辩要点】整个详情页通过模板字符串一次性生成。
+         * 核心结构：
+         *   左侧：主图 + 缩略图列表（支持多图切换）
+         *   右侧：名称 → 描述 → 价格 → 元信息 → 数量选择 → 操作按钮
+         *   下方：标签页（详情 / 规格参数表格）
+         * 
+         * 关键 CSS：Grid 两栏布局（grid-template-columns: 1fr 1fr）
          */
         function renderProductDetail(product) {
             const container = document.getElementById('product-detail-container');
-            // 获取所有图片（主图 + 缩略图）
+            // 获取所有图片：优先 product.images 数组，回退到 product.image 单图
             const images = product.images || [product.image];
             
+            // ★ 模板字符串 `` 生成完整 HTML
             container.innerHTML = `
                 <div class="product-detail">
-                    <!-- ===== 左侧图片画廊 ===== -->
+                    <!-- ===== 左侧：图片画廊 ===== -->
                     <div class="detail-gallery">
                         <!-- 主图显示区 -->
                         <div class="detail-main-image">
-                            <img src="${images[0]}" alt="${product.name}" id="main-image" onerror="this.parentElement.innerHTML='<div style=width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#e0e0e0,#f0f0f0);color:#999;font-size:64px;>📦</div>'">
+                            <img src="${images[0]}" alt="${product.name}" id="main-image" 
+                                 onerror="this.parentElement.innerHTML='<div style=...>📦</div>'">
+                            <!-- onerror：图片加载失败时显示占位符 -->
                         </div>
-                        <!-- 缩略图列表，点击可切换主图 -->
+                        <!-- 缩略图列表 -->
                         <div class="detail-thumbnails">
                             ${images.map((img, i) => `
-                                <div class="detail-thumbnail ${i === 0 ? 'active' : ''}" onclick="switchImage('${img}', this)">
+                                <!-- 第1张缩略图默认激活（active 类） -->
+                                <div class="detail-thumbnail ${i === 0 ? 'active' : ''}" 
+                                     onclick="switchImage('${img}', this)">
                                     <img src="${img}" alt="${product.name}" onerror="this.innerHTML='📦'">
                                 </div>
                             `).join('')}
                         </div>
                     </div>
                     
-                    <!-- ===== 右侧商品信息 ===== -->
+                    <!-- ===== 右侧：商品信息 ===== -->
                     <div class="detail-info">
-                        <!-- 商品名称 + 描述 -->
+                        <!-- 商品名称（h1 标签，SEO 友好） -->
                         <h1 class="detail-name">${product.name}</h1>
+                        <!-- 商品描述 -->
                         <div class="detail-desc">${product.desc}</div>
                         
-                        <!-- 价格区域（红色渐变背景） -->
+                        <!-- 价格区域：浅红渐变背景 -->
                         <div class="detail-price-area">
                             <div class="price-label">优选价</div>
-                            <span class="detail-price">${product.price.toFixed(2)}</span>
-                            <span class="detail-original">¥${product.originalPrice.toFixed(2)}</span>
+                            <span class="detail-price">${product.price.toFixed(2)}</span>  <!-- 现价（大红色） -->
+                            <span class="detail-original">¥${product.originalPrice.toFixed(2)}</span>  <!-- 原价（删除线） -->
                         </div>
                         
-                        <!-- 商品元信息：销量、评分、库存 -->
+                        <!-- 商品元信息：销量 | 评分（⭐重复） | 库存 -->
                         <div class="detail-meta">
                             <span>销量: ${product.sales}件</span>
                             <span>评分: ${'⭐'.repeat(Math.floor(product.rating))} ${product.rating}</span>
+                            <!-- '⭐'.repeat(n)：重复 n 次字符串 -->
                             <span>库存: ${product.stock}件</span>
                         </div>
                         
-                        <!-- 数量选择器 -->
+                        <!-- 数量选择器：减号按钮 + 输入框 + 加号按钮 -->
                         <div class="quantity-selector">
                             <span>数量：</span>
-                            <button class="qty-btn" onclick="changeQty(-1)">−</button>
-                            <input type="number" class="qty-input" id="qty-input" value="1" min="1" max="${product.stock}" onchange="validateQty(${product.stock})">
-                            <button class="qty-btn" onclick="changeQty(1)">+</button>
+                            <button class="qty-btn" onclick="changeQty(-1)">−</button>  <!-- 减1 -->
+                            <!-- type="number"：数字输入框，min/max 限制范围 -->
+                            <input type="number" class="qty-input" id="qty-input" 
+                                   value="1" min="1" max="${product.stock}" 
+                                   onchange="validateQty(${product.stock})">
+                            <button class="qty-btn" onclick="changeQty(1)">+</button>   <!-- 加1 -->
                             <span style="margin-left:16px;font-size:13px;color:#999;">库存 ${product.stock} 件</span>
                         </div>
                         
-                        <!-- 操作按钮：收藏 + 加入购物车 + 立即购买 -->
+                        <!-- 操作按钮：加入购物车 + 立即购买 -->
                         <div class="detail-actions">
                             <button class="btn-add-to-cart" onclick="addToCartWithQty(${product.id})">加入购物车</button>
                             <button class="btn-buy-now" onclick="buyNow(${product.id})">立即购买</button>
                         </div>
+                        
                         <!-- 收藏按钮 -->
                         <div style="margin-top:12px;">
                             <button onclick="toggleFavorite(${product.id}); updateDetailFavBtn(${product.id});" 
                                     id="detail-fav-btn"
                                     style="background:none;border:1px solid var(--border);padding:8px 20px;border-radius:20px;cursor:pointer;font-size:14px;transition:all 0.3s;">
                                 ${isFavorited(product.id) ? '❤️ 已收藏' : '🤍 收藏商品'}
+                                <!-- 三元表达式：已收藏显示红心，否则显示空心 -->
                             </button>
                         </div>
                     </div>
@@ -248,16 +264,18 @@
                         <div class="detail-tab-header active" onclick="switchTab(this, 'tab-detail')">商品详情</div>
                         <div class="detail-tab-header" onclick="switchTab(this, 'tab-params')">规格参数</div>
                     </div>
-                    <!-- 商品详情内容 -->
+                    <!-- 标签内容1：商品详情（pre-line 保留换行） -->
                     <div class="detail-tab-content active" id="tab-detail">
                         <p style="white-space:pre-line;line-height:1.8;">${product.detail}</p>
+                        <!-- white-space:pre-line：保留换行符，合并多余空格 -->
                     </div>
-                    <!-- 规格参数表格 -->
+                    <!-- 标签内容2：规格参数表格（斑马纹背景） -->
                     <div class="detail-tab-content" id="tab-params">
                         <table style="width:100%;border-collapse:collapse;">
                             <tr style="background:#fafafa;"><td style="padding:12px;border:1px solid #eee;width:150px;font-weight:600;">商品名称</td><td style="padding:12px;border:1px solid #eee;">${product.name}</td></tr>
                             <tr><td style="padding:12px;border:1px solid #eee;font-weight:600;">商品分类</td><td style="padding:12px;border:1px solid #eee;">${product.category}</td></tr>
                             <tr style="background:#fafafa;"><td style="padding:12px;border:1px solid #eee;font-weight:600;">商品编号</td><td style="padding:12px;border:1px solid #eee;">PRD${String(product.id).padStart(6,'0')}</td></tr>
+                            <!-- padStart(6,'0')：ID 补零为 6 位，如 1 → 000001 -->
                             <tr><td style="padding:12px;border:1px solid #eee;font-weight:600;">累计销量</td><td style="padding:12px;border:1px solid #eee;">${product.sales} 件</td></tr>
                             <tr style="background:#fafafa;"><td style="padding:12px;border:1px solid #eee;font-weight:600;">用户评分</td><td style="padding:12px;border:1px solid #eee;">${product.rating} 分</td></tr>
                         </table>
@@ -270,26 +288,28 @@
          * 切换主图显示
          * @param {string} src - 图片路径
          * @param {Element} el - 被点击的缩略图元素
-         * 实现方式：getElementById('main-image').src 替换主图 + classList 切换缩略图高亮
-         * 实现原理：直接修改 <img> 元素的 src 属性，浏览器会立即加载新图片。
-         *           同时移除所有缩略图的 .active 类，再为被点击的缩略图添加 .active 类。
-         *           CSS 中 .detail-thumbnail.active 有红色边框，直观表示当前选中状态。
+         * 【答辩要点】直接修改 img 的 src 属性，浏览器自动加载新图片。
+         * 同时切换缩略图的 active 类（红色边框高亮）。
          */
         function switchImage(src, el) {
-            document.getElementById('main-image').src = src;
+            document.getElementById('main-image').src = src;  // 替换主图
+            // 清除所有缩略图的 active 状态
             document.querySelectorAll('.detail-thumbnail').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
+            el.classList.add('active');  // 激活当前缩略图
         }
 
         /**
          * 切换详情标签页
-         * @param {Element} el - 被点击的标签头元素
+         * @param {Element} el - 被点击的标签头
          * @param {string} tabId - 目标内容区 ID
-         * 实现方式：querySelectorAll() + classList.add/remove('active') 切换标签
+         * 【答辩要点】标准的标签页切换模式：先清除所有 active，再激活目标。
          */
         function switchTab(el, tabId) {
+            // 清除所有标签头的 active
             document.querySelectorAll('.detail-tab-header').forEach(h => h.classList.remove('active'));
+            // 清除所有内容区的 active
             document.querySelectorAll('.detail-tab-content').forEach(c => c.classList.remove('active'));
+            // 激活当前标签
             el.classList.add('active');
             document.getElementById(tabId).classList.add('active');
         }
@@ -297,17 +317,14 @@
         /**
          * 修改购买数量（加减按钮）
          * @param {number} delta - 变化量（+1 或 -1）
-         * 实现方式：parseInt() 转数字 + Math.max()/Math.min() 限制范围
-         * 实现原理：parseInt(input.value) || 1 将输入值转为整数，无效时默认为 1。
-         *           Math.max(1, ...) 保证数量不低于 1，
-         *           Math.min(..., parseInt(input.max)) 保证数量不超过库存上限。
-         *           修改后的值通过 input.value 写回输入框，实现双向绑定效果。
+         * 【答辩要点】Math.max(1, ...) 保底，Math.min(..., max) 封顶。
          */
         function changeQty(delta) {
             const input = document.getElementById('qty-input');
-            let val = parseInt(input.value) || 1;
+            let val = parseInt(input.value) || 1;  // 转为整数，无效默认 1
+            // 钳制在 [1, max] 范围内
             val = Math.max(1, Math.min(val + delta, parseInt(input.max)));
-            input.value = val;
+            input.value = val;  // 写回输入框
         }
 
         /**
@@ -317,48 +334,47 @@
         function validateQty(max) {
             const input = document.getElementById('qty-input');
             let val = parseInt(input.value) || 1;
-            input.value = Math.max(1, Math.min(val, max));
+            input.value = Math.max(1, Math.min(val, max));  // 钳制范围
         }
 
         /**
          * 加入购物车（读取当前选择的数量）
          * @param {number} productId - 商品ID
-         * 实现方式：getElementById('qty-input').value 读取数量 + 调用 addToCart() 全局函数
+         * 【答辩要点】从数量输入框读取用户选择的购买数量，调用全局 addToCart 函数。
          */
         function addToCartWithQty(productId) {
             const qty = parseInt(document.getElementById('qty-input').value) || 1;
-            addToCart(productId, qty);
+            addToCart(productId, qty);  // 调用全局函数（app.js 中定义）
         }
 
         /**
          * 立即购买：加入购物车后跳转到购物车页面
          * @param {number} productId - 商品ID
-         * 实现方式：addToCart() 添加商品 + setTimeout() 延迟跳转到 cart.html
-         * 实现原理：先读取当前选择的数量，调用全局 addToCart() 函数添加到购物车，
-         *           setTimeout 延迟 500ms 跳转，给 addToCart 内部的 Toast 提示留出显示时间。
-         *          "立即购买"本质上是"加入购物车 + 跳转购物车"的快捷组合操作。
+         * 【答辩要点】"立即购买"是"加入购物车 + 跳转购物车"的快捷组合。
+         * setTimeout 延迟 500ms 是为了让 Toast 提示有时间显示。
          */
         function buyNow(productId) {
             const qty = parseInt(document.getElementById('qty-input').value) || 1;
-            addToCart(productId, qty);
+            addToCart(productId, qty);  // 先加入购物车
             setTimeout(() => {
-                window.location.href = 'cart.html';
+                window.location.href = 'cart.html';  // 500ms 后跳转购物车
             }, 500);
         }
 
         /**
          * 更新详情页收藏按钮状态
          * @param {number} productId - 商品ID
-         * 实现方式：getElementById() 获取按钮 + innerHTML 更新文字和图标
+         * 【答辩要点】根据 isFavorited() 的结果动态切换按钮文字和图标。
          */
         function updateDetailFavBtn(productId) {
             const btn = document.getElementById('detail-fav-btn');
             if (btn) {
+                // 三元表达式切换显示内容
                 btn.innerHTML = isFavorited(productId) ? '❤️ 已收藏' : '🤍 收藏商品';
             }
         }
 
-        // 页面加载完成后执行
+        // ★ 页面加载完成后自动执行 loadProductDetail
         document.addEventListener('DOMContentLoaded', loadProductDetail);
     </script>
 </body>
