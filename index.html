@@ -57,9 +57,10 @@
             <!-- position:relative 为搜索历史面板提供定位参考 -->
             <div class="search-box" style="position:relative;">
                 <!-- 搜索输入框：聚焦时显示搜索历史 -->
+                <!-- 搜索输入框：聚焦时显示搜索历史，失焦时延迟隐藏（给点击历史项留时间） -->
                 <input type="text" id="search-input" placeholder="搜索商品、品牌、分类..." 
-                       onfocus="showSearchHistory()"                        <!-- 聚焦时显示历史 -->
-                       onblur="setTimeout(hideSearchHistory, 200)">          <!-- 失焦时延迟隐藏（给点击历史项留时间） -->
+                       onfocus="showSearchHistory()"
+                       onblur="setTimeout(hideSearchHistory, 200)">
                 <button id="search-btn">🔍 搜索</button>  <!-- 搜索按钮（JS 绑定 click 和 Enter 事件） -->
                 
                 <!-- 【新功能】搜索历史下拉面板 -->

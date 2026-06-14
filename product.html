@@ -231,7 +231,7 @@
                         <div class="quantity-selector">
                             <span>数量：</span>
                             <button class="qty-btn" onclick="changeQty(-1)">−</button>  <!-- 减1 -->
-                            <!-- type="number"：数字输入框，min/max 限制范围 -->
+                            <!-- type="number"：数字输入框，min/max 限制范围，onchange 时校验不超库存 -->
                             <input type="number" class="qty-input" id="qty-input" 
                                    value="1" min="1" max="${product.stock}" 
                                    onchange="validateQty(${product.stock})">
