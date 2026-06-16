@@ -90,6 +90,16 @@ document.addEventListener('DOMContentLoaded', () => {
 // Fetch 基于 Promise，支持链式调用 .then() 和 .catch()。
 // 异步编程的优势：不阻塞主线程，页面在等待数据时仍然可以响应用户操作。
 // 错误处理：.catch() 捕获网络错误，并提供降级方案（备用数据）。
+//
+// 【答辩问答】Q：商品数据从哪来的？怎么加载的？
+// A：商品数据存在 data/products.json 文件里。用 fetch() 发送 HTTP 请求读取。
+//   fetch 返回 Promise，.then(res => res.json()) 把响应转成 JSON 对象，
+//   再 .then(data => ...) 拿到数据后存入 AppState.products 并渲染到页面。
+//   fetch 是异步的，不会阻塞页面。.catch 处理加载失败的情况。
+//
+// Q：fetch 和 XMLHttpRequest 有什么区别？
+// A：fetch 是 ES6 的新 API，基于 Promise，语法更简洁（链式调用）。
+//   XMLHttpRequest 是旧 API，用回调函数，代码嵌套多可读性差。现在推荐用 fetch。
 // =====================================================
 function loadProducts() {
     // fetch() 返回一个 Promise 对象，代表异步操作的最终结果
@@ -206,6 +216,11 @@ function updateUserUI() {
  * 退出登录
  * 【答辩要点】清空所有用户相关数据，包括内存（AppState）和持久化存储（LocalStorage）。
  * setTimeout 延迟跳转是为了让用户看到 Toast 提示信息。
+ *
+ * 【答辩问答】Q：退出登录做了什么？为什么退出后数据没了？
+ * A：清空 AppState.currentUser、购物车和收藏，再用 localStorage.removeItem 删掉
+ *   登录信息。然后跳转到登录页。下次登录时 loadCartFromStorage() 会按用户 ID
+ *   重新加载该用户的购物车数据，所以数据不会真的丢失，只是清空了当前内存。
  */
 function logout() {
     // 清空内存中的用户状态
@@ -242,6 +257,16 @@ function logout() {
  *   1. 检查是否已存在该商品 → 存在则累加数量，不存在则新增
  *   2. 保存到 LocalStorage 并更新 UI
  * 这是购物车最基本也是最重要的操作。
+ *
+ * 【答辩问答】Q：点击"加入购物车"后发生了什么？
+ * A：调 addToCart()。先用 cart.find() 查购物车有没有这个商品，
+ *   有就把 quantity+1，没有就 push() 新对象。然后 saveCartToStorage() 存到
+ *   LocalStorage（JSON.stringify 转字符串），最后 updateCartBadge() 更新角标数字。
+ *
+ * Q：为什么刷新页面购物车数据还在？
+ * A：因为存在 LocalStorage 里。每次修改购物车都调 saveCartToStorage() 存，
+ *   页面加载时调 loadCartFromStorage() 用 JSON.parse 还原。LocalStorage 是浏览器
+ *   持久化存储，关掉浏览器也不会丢。
  */
 function addToCart(productId, quantity = 1) {
     // === 权限检查：未登录用户不能使用购物车 ===
@@ -300,6 +325,12 @@ function removeFromCart(productId) {
  * @param {number} quantity  - 新数量（会被限制在 1-99 之间）
  * 【答辩要点】使用 Math.max 和 Math.min 实现"值域钳制"（clamp）。
  * Math.max(1, x) 确保不小于1，Math.min(x, 99) 确保不大于99。
+ */
+/*
+ * 【答辩问答】Q：数量怎么限制不能超过库存或小于1？
+ * A：用 Math.max 和 Math.min 做"值域钳制"。Math.max(1, quantity) 保证不小于1，
+ *   Math.min(quantity, 99) 保证不大于99。这两个函数嵌套使用：Math.max(1, Math.min(quantity, 99))，
+ *   先从 99 和 quantity 取最小值，再和 1 取最大值。这就是"钳制"（clamp）。
  */
 function updateCartQuantity(productId, quantity) {
     // find() 返回的是数组元素的引用，修改它直接修改原数组
@@ -432,6 +463,13 @@ function renderProducts(products, containerId = 'product-grid') {
  * @param {number} productId - 商品ID
  * 【答辩要点】通过 URL 参数传递商品 ID（RESTful 风格的参数传递）。
  */
+/*
+ * 【答辩问答】Q：怎么从商品列表跳到商品详情页？
+ * A：用 URL 参数传递商品 ID。window.location.href = `product.html?id=${productId}`。
+ *   详情页用 new URLSearchParams(window.location.search).get('id') 解析 URL 拿到 ID，
+ *   然后用 products.find(p => p.id == id) 找到对应商品再渲染页面。
+ *   这是"参数化页面"模式，一个 product.html 可以展示所有商品，不需要为每个商品创建页面。
+ */
 function viewProductDetail(productId) {
     // 跳转到 product.html 并带上 id 参数
     window.location.href = `product.html?id=${productId}`;
@@ -442,6 +480,12 @@ function viewProductDetail(productId) {
 // 【答辩要点】实现了模糊搜索，支持按名称、描述、分类三个维度匹配。
 // 使用 includes() 方法判断字符串包含关系（大小写不敏感通过 toLowerCase 实现）。
 // 搜索可以叠加分类筛选和排序，实现了多维度的商品过滤。
+//
+// 【答辩问答】Q：搜索功能怎么做的？输入文字就能搜吗？
+// A：点搜索按钮或按回车才触发搜索。拿到输入文字后 .toLowerCase() 转小写，
+//   用 products.filter(p => p.name.includes(keyword)) 筛选商品名包含关键词的。
+//   includes() 是字符串方法，判断是否包含子串。转小写是为了不区分大小写。
+//   不是实时搜索（没有用 input 事件），是为了减少不必要的渲染。
 // =====================================================
 
 /**
@@ -968,6 +1012,14 @@ document.addEventListener('visibilitychange', () => {
 // 【答辩要点】订单是电商系统的核心数据，存储用户购买记录。
 // 订单号生成：'ORD' + Date.now() 确保唯一性。
 // 订单创建后自动清空购物车中已购买的商品。
+//
+// 【答辩问答】Q：订单号怎么生成的？会不会重复？
+// A：'ORD' + Date.now()。Date.now() 返回当前毫秒级时间戳，每毫秒都在变化，
+//   理论上不会重复。如果要更保险可以加随机数或 UUID。
+//
+// Q：提交订单后购物车里已买的商品会怎样？
+// A：createOrder() 最后会用 cart = cart.filter(i => !i.checked) 清除已选中的商品。
+//   未选中的商品保留在购物车里。然后把订单和更新后的购物车都存到 LocalStorage。
 // =====================================================
 
 /**

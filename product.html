@@ -145,6 +145,12 @@
             const params = new URLSearchParams(window.location.search);
             const productId = parseInt(params.get('id'));  // 获取 id 参数并转为数字
             
+            /*
+             * 【答辩问答】Q：商品详情页怎么知道显示哪个商品？
+             * A：从 URL 参数获取商品 ID。用 new URLSearchParams(window.location.search).get('id')
+             *   解析 ?id=3 这种格式。然后 fetch 加载 products.json，find() 找到 ID 匹配的商品渲染。
+             *   这叫"参数化页面"——一个 product.html 可以显示所有商品，不需要每个商品一个页面。
+             */
             // ★ fetch 异步请求商品数据
             fetch('data/products.json')
                 .then(res => res.json())  // 解析 JSON

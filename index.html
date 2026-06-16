@@ -286,6 +286,13 @@
         // 【答辩要点】搜索历史面板使用 position:absolute 定位在搜索框下方。
         // 通过 .show 类控制显隐（display:none ↔ display:block）。
         // 使用 onmousedown + preventDefault 防止 blur 先于 click 触发。
+        //
+        // 【答辩问答】Q：搜索历史怎么存怎么显示？
+        // A：搜索关键词存在 AppState.searchHistory 数组里，用 LocalStorage 持久化。
+        //   点击搜索框（onfocus）显示下拉面板，渲染历史列表。失焦（onblur）时 200ms 后隐藏。
+        //   为什么用 onmousedown 而不是 onclick？因为点击历史项时 blur 会先触发导致
+        //   面板消失，onmousedown 在 blur 之前触发，preventDefault() 阻止默认行为。
+        //   清空按钮调用 clearSearchHistory() 清空数组和 LocalStorage。
         // =============================================
         
         /**

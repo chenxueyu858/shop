@@ -128,7 +128,18 @@ button {
     cursor: pointer;  /* 鼠标悬停时显示手型（提升交互体验） */
 }
 
-/* 通用容器：限制内容最大宽度 + 水平居中 */
+/*
+ * 通用容器：限制内容最大宽度 + 水平居中
+ *
+ * 【答辩问答】Q：怎么让一个块级元素在页面里水平居中？
+ * A：margin: 0 auto。上下为 0，左右为 auto 会自动平分剩余空间，实现居中。
+ *   前提是元素必须有固定宽度（这里 max-width: 1200px），否则撑满全宽看不出效果。
+ *
+ * Q：怎么让文字/内容在元素内部水平和垂直都居中？
+ * A：用 Flexbox 最快：父元素设 display: flex; align-items: center; justify-content: center;
+ *   align-items 控制垂直方向，justify-content 控制水平方向，都设 center 就完全居中。
+ *   项目中商品图片区域、按钮文字、表单等大量使用这种方式。
+ */
 .container {
     max-width: 1200px;     /* 最大宽度 1200px（适配主流屏幕） */
     margin: 0 auto;        /* 上下 0，左右 auto（水平居中） */
@@ -198,6 +209,12 @@ button {
    【答辩要点】包含 Logo、搜索框、操作区。
    position: sticky 是 CSS3 的重要特性：滚动到顶部后固定在视口。
    z-index: 1000 确保头部始终在最上层，不被其他元素遮挡。
+   
+   【答辩问答】Q：怎么让导航栏滚动时固定在顶部？
+   A：position: sticky; top: 0; z-index: 1000。
+      sticky 是"粘性定位"——正常滚动时它在文档流里，滚到顶部时"粘"住不动。
+      和 fixed 的区别：fixed 始终固定脱离文档流，sticky 到达阈值才固定。
+      z-index: 1000 确保它在其他内容上面。
    ===================================================== */
 .main-header {
     background-color: var(--white);
@@ -609,6 +626,12 @@ button {
 }
 
 /* 商品网格：4列 Grid 布局 */
+/*
+ * 【答辩问答】Q：商品列表怎么排成四列的？
+ * A：用 CSS Grid 布局。display: grid 开启网格，grid-template-columns: repeat(4, 1fr)
+ *   表示重复4列、每列等宽。1fr 是"一份剩余空间"，4个1fr 就平分。gap 控制列间距。
+ *   手机端用 @media 改成 repeat(2, 1fr) 就是两列。
+ */
 .product-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);  /* 4列等宽 */
@@ -625,7 +648,14 @@ button {
     cursor: pointer;        /* 鼠标手型（可点击跳转详情） */
 }
 
-/* 悬停：上浮 6px + 阴影加深 */
+/*
+ * 【答辩问答】Q：为什么鼠标放到商品卡片上它会往上移？
+ * A：用 transform: translateY(-6px)，translateY 沿垂直方向平移，负值往上。
+ *   配合 transition: all 0.3s ease 让移动平滑过渡而不是瞬间跳上去。
+ *   box-shadow 也变深了（shadow-hover），双重效果让卡片看起来像"浮起来"了。
+ *   为什么用 transform 而不是 margin-top / top？
+ *   因为 transform 不改变文档流，不会影响其他元素的位置，性能也更好（GPU 加速）。
+ */
 .product-card:hover {
     transform: translateY(-6px);
     box-shadow: var(--shadow-hover);
@@ -644,11 +674,22 @@ button {
 .product-card .product-image img {
     width: 100%;
     height: 100%;
+    /*
+     * 【答辩问答】Q：图片怎么保证填满容器又不变形？
+     * A：用 object-fit: cover。它会按比例缩放图片填满容器，超出部分裁剪。
+     *   和 background-size: cover 原理一样，只是作用在 img 标签上。
+     *   如果想让图片全部显示不裁剪，用 object-fit: contain（会留白）。
+     */
     object-fit: cover;      /* 图片覆盖容器，保持比例裁剪 */
     transition: transform 0.4s ease;  /* 图片缩放动画 */
 }
 
-/* 悬停时图片放大 5% */
+/*
+ * 【答辩问答】Q：鼠标放上去图片为什么也会放大？
+ * A：.product-card:hover .product-image img 这是后代选择器+伪类组合，
+ *   表示"当卡片被悬停时，卡片里的图片"。transform: scale(1.05) 放大 5%。
+ *   0.4s 的过渡时间比卡片上移的 0.3s 稍长，让图片放大有"滞后感"，更有层次。
+ */
 .product-card:hover .product-image img {
     transform: scale(1.05);
 }
@@ -670,7 +711,11 @@ button {
     padding: 14px;
 }
 
-/* 商品名称：最多显示2行，超出省略 */
+/*
+ * 【答辩问答】Q：商品名太长怎么只显示两行后面用省略号？
+ * A：用 -webkit-line-clamp: 2 限制行数，配合 display: -webkit-box 和 overflow: hidden。
+ *   这是 CSS3 的多行截断方案，不需要 JS。单行截断更简单：text-overflow: ellipsis + white-space: nowrap。
+ */
 .product-card .product-name {
     font-size: 14px;
     font-weight: 500;
@@ -1845,7 +1890,18 @@ button {
    搜索历史面板使用绝对定位在搜索框下方。
    ===================================================== */
 
-/* 收藏按钮：定位在商品图片右上角 */
+/*
+ * 【答辩问答】Q：收藏按钮怎么放在图片右上角的？
+ * A：父容器 .product-image 设了 position: relative，按钮设 position: absolute。
+ *   absolute 定位是相对于最近的 relative 父元素来定位的。
+ *   top: 10px; right: 10px 控制距离右上角各 10 像素。
+ *   z-index: 2 确保按钮在图片上面（图片 z-index 默认为 auto）。
+ *
+ * Q：收藏按钮悬停跳动怎么做的？
+ * A：两个效果叠加。悬停：transform: scale(1.3) 放大 30% + transition 0.3s 平滑过渡。
+ *   点击收藏：加 .active 类触发 @keyframes heartBeat 动画，0.4s 内 scale(1→1.3→0.95→1)，
+ *   快速"放大→缩小→恢复"，模拟心跳感觉。animation 播完自动结束，不循环。
+ */
 .product-card .favorite-btn {
     position: absolute;
     top: 10px;
@@ -1915,7 +1971,12 @@ button {
     border-color: var(--primary);
 }
 
-/* 搜索历史面板 */
+/*
+ * 【答辩问答】Q：搜索历史下拉框怎么定位在搜索框正下方的？
+ * A：搜索框父容器 .search-box 设 position: relative，面板设 position: absolute。
+ *   absolute 相对于最近的 relative 父元素定位。top: 42px 等于搜索框高度，刚好在下方。
+ *   left: 0; right: 0 让面板和搜索框一样宽。z-index: 100 保证在最上层。
+ */
 .search-history-panel {
     position: absolute;         /* 相对于搜索框定位 */
     top: 42px;                  /* 搜索框高度 + 2px 边框 */
@@ -2016,6 +2077,13 @@ button {
    - 768px：平板竖屏（商品 3→2 列，详情页变单栏）
    - 480px：手机（进一步缩小）
    策略：桌面优先（默认样式为大屏），逐级适配小屏。
+   
+   【答辩问答】Q：怎么让网页在手机上也能正常显示？
+   A：用 @media (max-width: 768px) 媒体查询。当屏幕宽度 ≤ 768px 时，
+     里面的 CSS 规则会覆盖默认样式。比如把 4 列商品网格改成 2 列，
+     字号调小、间距减小。这叫"响应式布局"。
+     为什么是 max-width 而不是 min-width？max-width 是"小于等于时生效"，
+     适合桌面优先策略（默认大屏样式，小屏覆盖）。
    ===================================================== */
 
 /* 平板横屏 (≤1024px) */
